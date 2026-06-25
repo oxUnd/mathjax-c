@@ -871,8 +871,8 @@ run_test "space nobreakspace"       'x \nobreakspace y'               1
 # =====================================================================
 echo "=== Matrix Environments ==="
 run_test "matrix 2x2"               '\begin{matrix} 1 & 2 \\ 3 & 4 \end{matrix}'   40000
-run_test "pmatrix 2x2"              '\begin{pmatrix} a & b \\ c & d \end{pmatrix}' 80000
-run_test "bmatrix 2x2"              '\begin{bmatrix} a & b \\ c & d \end{bmatrix}' 80000
+run_test "pmatrix 2x2"              '\begin{pmatrix} a & b \\ c & d \end{pmatrix}' 65000
+run_test "bmatrix 2x2"              '\begin{bmatrix} a & b \\ c & d \end{bmatrix}' 65000
 run_test "Bmatrix 2x2"              '\begin{Bmatrix} 1 & 2 \\ 3 & 4 \end{Bmatrix}' 50000
 run_test "vmatrix 2x2"              '\begin{vmatrix} a & b \\ c & d \end{vmatrix}' 80000
 run_test "Vmatrix 2x2"              '\begin{Vmatrix} a & b \\ c & d \end{Vmatrix}' 80000
