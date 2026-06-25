@@ -9,21 +9,22 @@ static void render_glyph_box(mjx_renderer* r, mjx_box* box,
   unsigned int w, h;
   int left, top;
   unsigned char* alpha;
+  mjx_font* font = (box->font_index == 1 && r->fallback_font) ? r->fallback_font : r->font;
   double natural_w = 0;
   double natural_h = 0;
-  double render_size = box->font_size > 0.0 ? box->font_size : r->font->em_size;
-  double render_scale = (r->font && r->font->em_size > 0.0) ?
-    render_size / r->font->em_size : 1.0;
+  double render_size = box->font_size > 0.0 ? box->font_size : font->em_size;
+  double render_scale = (font && font->em_size > 0.0) ?
+    render_size / font->em_size : 1.0;
 
   if (box->glyph_id != 0) {
-    alpha = mjx_font_render_glyph_id_size(r->font, box->glyph_id, render_size, &w, &h, &left, &top);
-    natural_w = mjx_font_glyph_width(r->font, box->glyph_id) * render_scale;
-    natural_h = mjx_font_glyph_height(r->font, box->glyph_id) * render_scale;
+    alpha = mjx_font_render_glyph_id_size(font, box->glyph_id, render_size, &w, &h, &left, &top);
+    natural_w = mjx_font_glyph_width(font, box->glyph_id) * render_scale;
+    natural_h = mjx_font_glyph_height(font, box->glyph_id) * render_scale;
   } else {
-    alpha = mjx_font_render_glyph_size(r->font, box->codepoint, render_size, &w, &h, &left, &top);
+    alpha = mjx_font_render_glyph_size(font, box->codepoint, render_size, &w, &h, &left, &top);
     if (box->codepoint) {
       mjx_glyph_info info;
-      if (mjx_font_get_glyph(r->font, box->codepoint, &info)) {
+      if (mjx_font_get_glyph(font, box->codepoint, &info)) {
         natural_w = info.advance_width * render_scale;
         natural_h = (info.height + info.depth) * render_scale;
       }
@@ -90,20 +91,21 @@ static void compute_extents(mjx_renderer* r, mjx_box* box, double ox, double oy,
     unsigned int w = 0, h = 0;
     int left = 0, top = 0;
     unsigned char* alpha = NULL;
+    mjx_font* font = (box->font_index == 1 && r->fallback_font) ? r->fallback_font : r->font;
     double natural_w = 0;
     double natural_h = 0;
-    double render_size = box->font_size > 0.0 ? box->font_size : r->font->em_size;
-    double render_scale = (r->font && r->font->em_size > 0.0) ?
-      render_size / r->font->em_size : 1.0;
+    double render_size = box->font_size > 0.0 ? box->font_size : font->em_size;
+    double render_scale = (font && font->em_size > 0.0) ?
+      render_size / font->em_size : 1.0;
     if (box->glyph_id != 0) {
-      alpha = mjx_font_render_glyph_id_size(r->font, box->glyph_id, render_size, &w, &h, &left, &top);
-      natural_w = mjx_font_glyph_width(r->font, box->glyph_id) * render_scale;
-      natural_h = mjx_font_glyph_height(r->font, box->glyph_id) * render_scale;
+      alpha = mjx_font_render_glyph_id_size(font, box->glyph_id, render_size, &w, &h, &left, &top);
+      natural_w = mjx_font_glyph_width(font, box->glyph_id) * render_scale;
+      natural_h = mjx_font_glyph_height(font, box->glyph_id) * render_scale;
     } else {
-      alpha = mjx_font_render_glyph_size(r->font, box->codepoint, render_size, &w, &h, &left, &top);
+      alpha = mjx_font_render_glyph_size(font, box->codepoint, render_size, &w, &h, &left, &top);
       if (box->codepoint) {
         mjx_glyph_info info;
-        if (mjx_font_get_glyph(r->font, box->codepoint, &info)) {
+        if (mjx_font_get_glyph(font, box->codepoint, &info)) {
           natural_w = info.advance_width * render_scale;
           natural_h = (info.height + info.depth) * render_scale;
         }
@@ -210,6 +212,7 @@ mjx_renderer* mjx_renderer_create(mjx_font* font) {
   mjx_renderer* r = (mjx_renderer*)calloc(1, sizeof(mjx_renderer));
   if (!r) return NULL;
   r->font = font;
+  r->fallback_font = NULL;
   r->fg_color = 0x000000FF;
   r->bg_color = 0x00000000;
   return r;

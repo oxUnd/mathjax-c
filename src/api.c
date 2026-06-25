@@ -8,9 +8,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 struct mjx_ctx {
   mjx_font* font;
+  mjx_font* fallback_font;
   mjx_parser* parser;
   mjx_layout_ctx* layout;
   mjx_renderer* renderer;
@@ -21,12 +23,38 @@ struct mjx_ctx {
   mjx_error last_error;
 };
 
+static const char* find_fallback_font_path(const mjx_opts* opts) {
+  if (opts && opts->fallback_font_path && access(opts->fallback_font_path, R_OK) == 0) {
+    return opts->fallback_font_path;
+  }
+
+  const char* env = getenv("MJX_FALLBACK_FONT");
+  if (env && access(env, R_OK) == 0) return env;
+
+  const char* candidates[] = {
+    "/System/Library/Fonts/PingFang.ttc",
+    "/System/Library/Fonts/STHeiti Medium.ttc",
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/System/Library/Fonts/Supplemental/Songti.ttc",
+    "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+    NULL
+  };
+  for (int i = 0; candidates[i]; i++) {
+    if (access(candidates[i], R_OK) == 0) return candidates[i];
+  }
+  return NULL;
+}
+
 mjx_ctx* mjx_init(const mjx_opts* opts) {
   mjx_ctx* ctx = (mjx_ctx*)calloc(1, sizeof(mjx_ctx));
   if (!ctx) return NULL;
 
   /* Set defaults */
   ctx->opts.font_path = opts ? opts->font_path : NULL;
+  ctx->opts.fallback_font_path = opts ? opts->fallback_font_path : NULL;
   ctx->opts.font_size = opts ? opts->font_size : 48.0;
   ctx->opts.fg_color = opts ? opts->fg_color : 0x000000FF;
   ctx->opts.bg_color = opts ? opts->bg_color : 0x00000000;
@@ -44,6 +72,11 @@ mjx_ctx* mjx_init(const mjx_opts* opts) {
     }
     /* Load MATH constants */
     mjx_font_load_math_constants(ctx->font, &ctx->font->math_constants);
+
+    const char* fallback_path = find_fallback_font_path(opts);
+    if (fallback_path && strcmp(fallback_path, ctx->opts.font_path) != 0) {
+      ctx->fallback_font = mjx_font_load(fallback_path, ctx->opts.font_size, ctx->opts.dpi);
+    }
   }
 
   /* Create parser */
@@ -58,11 +91,13 @@ mjx_ctx* mjx_init(const mjx_opts* opts) {
   /* Create layout context */
   if (ctx->font) {
     ctx->layout = mjx_layout_ctx_create(ctx->font);
+    ctx->layout->fallback_font = ctx->fallback_font;
   }
 
   /* Create renderer */
   if (ctx->font) {
     ctx->renderer = mjx_renderer_create(ctx->font);
+    ctx->renderer->fallback_font = ctx->fallback_font;
     ctx->renderer->fg_color = ctx->fg_color;
     ctx->renderer->bg_color = ctx->bg_color;
   }
@@ -76,6 +111,7 @@ void mjx_free(mjx_ctx* ctx) {
   if (ctx->renderer) mjx_renderer_destroy(ctx->renderer);
   if (ctx->layout) mjx_layout_ctx_destroy(ctx->layout);
   if (ctx->parser) mjx_parser_destroy(ctx->parser);
+  if (ctx->fallback_font) mjx_font_unload(ctx->fallback_font);
   if (ctx->font) mjx_font_unload(ctx->font);
   free(ctx);
 }

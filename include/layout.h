@@ -42,6 +42,7 @@ typedef struct mjx_box {
   /* For GLYPH boxes */
   uint32_t codepoint;
   unsigned int glyph_id;
+  int font_index;
   double italic_correction;
   double font_size;
   int allow_nonuniform_scale;
@@ -69,6 +70,7 @@ typedef struct mjx_box {
 /* Layout context */
 typedef struct mjx_layout_ctx {
   mjx_font* font;
+  mjx_font* fallback_font;
   mjx_math_constants* mc;
   double font_size;
   double mu_unit;     /* 1mu = 1/18 em */

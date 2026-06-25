@@ -14,12 +14,24 @@ mjx_box* mjx_box_create(mjx_box_type type) {
 
 mjx_box* mjx_box_create_glyph(mjx_layout_ctx* ctx, uint32_t codepoint) {
   double scale = 1.0;
-  if (ctx && ctx->font && ctx->font->em_size > 0) {
-    scale = ctx->font_size / ctx->font->em_size;
+  mjx_font* font = ctx ? ctx->font : NULL;
+  int font_index = 0;
+  if (font && font->em_size > 0) {
+    scale = ctx->font_size / font->em_size;
   }
 
   mjx_glyph_info info;
-  if (!mjx_font_get_glyph(ctx->font, codepoint, &info)) {
+  memset(&info, 0, sizeof(info));
+  if (!font || !mjx_font_get_glyph(font, codepoint, &info)) {
+    if (ctx && ctx->fallback_font &&
+        mjx_font_get_glyph(ctx->fallback_font, codepoint, &info)) {
+      font = ctx->fallback_font;
+      font_index = 1;
+      scale = font->em_size > 0 ? ctx->font_size / font->em_size : 1.0;
+    }
+  }
+
+  if (!font || info.glyph_id == 0) {
     /* Glyph not found, create a small space */
     mjx_box* box = mjx_box_create(MJX_BOX_GLYPH);
     if (!box) return NULL;
@@ -36,6 +48,7 @@ mjx_box* mjx_box_create_glyph(mjx_layout_ctx* ctx, uint32_t codepoint) {
 
   box->codepoint = codepoint;
   box->glyph_id = info.glyph_id;
+  box->font_index = font_index;
   box->font_size = ctx->font_size;
   box->width = info.advance_width * scale;
   box->height = info.height * scale;

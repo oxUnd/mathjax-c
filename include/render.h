@@ -22,6 +22,7 @@ typedef struct mjx_buf {
 /* Renderer context */
 typedef struct mjx_renderer {
   mjx_font* font;
+  mjx_font* fallback_font;
   uint32_t fg_color;
   uint32_t bg_color;
 } mjx_renderer;

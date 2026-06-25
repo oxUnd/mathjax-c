@@ -63,6 +63,7 @@ typedef struct {
 /* Options for configuration */
 typedef struct {
   const char* font_path;      /* path to STIX Two Math font */
+  const char* fallback_font_path; /* optional text fallback font for CJK, etc. */
   double font_size;           /* base font size in points */
   uint32_t fg_color;          /* foreground color (0xRRGGBB) */
   uint32_t bg_color;          /* background color (0xRRGGBB, 0=transparent) */

@@ -9,6 +9,7 @@ mjx_layout_ctx* mjx_layout_ctx_create(mjx_font* font) {
   mjx_layout_ctx* ctx = (mjx_layout_ctx*)calloc(1, sizeof(mjx_layout_ctx));
   if (!ctx) return NULL;
   ctx->font = font;
+  ctx->fallback_font = NULL;
   ctx->font_size = font->em_size;
   ctx->mu_unit = ctx->font_size / 18.0;
   ctx->mc = &font->math_constants;

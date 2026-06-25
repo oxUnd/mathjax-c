@@ -94,6 +94,16 @@ static uint32_t decode_first_codepoint(const char* text, size_t len) {
   return cp;
 }
 
+static size_t utf8_char_len(const char* text, size_t remaining) {
+  if (!text || remaining == 0) return 0;
+  unsigned char c = (unsigned char)text[0];
+  if ((c & 0x80) == 0) return 1;
+  if ((c & 0xE0) == 0xC0 && remaining >= 2) return 2;
+  if ((c & 0xF0) == 0xE0 && remaining >= 3) return 3;
+  if ((c & 0xF8) == 0xF0 && remaining >= 4) return 4;
+  return 1;
+}
+
 static int largeop_default_limits(mjx_node* node) {
   if (!node || !node->text) return 0;
   uint32_t cp = decode_first_codepoint(node->text, node->text_len);
@@ -1966,8 +1976,12 @@ static mjx_node* parse_group(parse_state* state) {
   mjx_node* row = mjx_node_create(MJX_NODE_MROW);
   if (!row) { free(text); return NULL; }
 
-  for (size_t i = 0; i < len; i++) {
-    char single[2] = { text[i], '\0' };
+  for (size_t i = 0; i < len;) {
+    size_t char_len = utf8_char_len(text + i, len - i);
+    char single[8];
+    if (char_len >= sizeof(single)) char_len = 1;
+    memcpy(single, text + i, char_len);
+    single[char_len] = '\0';
     unsigned char c = (unsigned char)text[i];
     if (isdigit(c)) {
       mjx_node* mn = make_number(state, single);
@@ -1979,6 +1993,7 @@ static mjx_node* parse_group(parse_state* state) {
       mjx_node* mi = make_identifier(state, single);
       if (mi) mjx_node_append(row, mi);
     }
+    i += char_len;
   }
   free(text);
 
