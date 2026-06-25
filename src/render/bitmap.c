@@ -131,13 +131,15 @@ void mjx_buf_blit_alpha(mjx_buf* buf, const unsigned char* alpha,
       uint8_t da = (*dst >> 0) & 0xFF;
 
       if (a == 255) {
-        *dst = (fr << 24) | (fg << 16) | (fb << 8) | 0xFF;
+        *dst = ((uint32_t)fr << 24) | ((uint32_t)fg << 16) |
+               ((uint32_t)fb << 8) | 0xFFu;
       } else {
         uint8_t nr = (fr * a + dr * (255 - a)) / 255;
         uint8_t ng = (fg * a + dg * (255 - a)) / 255;
         uint8_t nb = (fb * a + db * (255 - a)) / 255;
         uint8_t na = da + (255 - da) * a / 255;
-        *dst = (nr << 24) | (ng << 16) | (nb << 8) | na;
+        *dst = ((uint32_t)nr << 24) | ((uint32_t)ng << 16) |
+               ((uint32_t)nb << 8) | (uint32_t)na;
       }
     }
   }
