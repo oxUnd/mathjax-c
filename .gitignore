@@ -1,0 +1,15 @@
+build/
+.tmp-renders/
+tmp_render/
+
+comparison_all/assets/
+comparison_market/assets/
+
+*.o
+*.a
+*.dylib
+*.so
+*.dSYM/
+
+.DS_Store
+*.log
