@@ -1,5 +1,6 @@
 #include "layout.h"
 #include "font.h"
+#include "font_data.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,15 +12,17 @@
 
 static mjx_box* make_fraction_rule_glyph(mjx_layout_ctx* ctx, double width,
                                          double min_thickness) {
-  static const unsigned int overline_glyphs[] = {1457, 1458, 1459, 1460, 1461};
+  const unsigned int* overline_glyphs = NULL;
+  unsigned int overline_count = 0;
   if (!ctx || !ctx->font || width <= 0.0) return NULL;
+  if (!mjx_stix_get_fraction_rule_variants(&overline_glyphs, &overline_count)) return NULL;
 
   double metric_scale = (ctx->font->em_size > 0.0) ? ctx->font_size / ctx->font->em_size : 1.0;
   unsigned int best_gid = 0;
   double best_w = 0.0;
   double best_h = 0.0;
 
-  for (unsigned int i = 0; i < sizeof(overline_glyphs) / sizeof(overline_glyphs[0]); i++) {
+  for (unsigned int i = 0; i < overline_count; i++) {
     double w = mjx_font_glyph_width(ctx->font, overline_glyphs[i]) * metric_scale;
     double h = mjx_font_glyph_height(ctx->font, overline_glyphs[i]) * metric_scale;
     if (w <= 0.0 || h <= 0.0) continue;

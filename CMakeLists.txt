@@ -16,6 +16,7 @@ add_library(mathjax STATIC
   src/font/font.c
   src/font/metrics.c
   src/font/glyph.c
+  src/font/stix_data.c
   src/render/bitmap.c
   src/render/draw.c
   src/kitty/kitty.c

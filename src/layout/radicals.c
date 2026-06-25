@@ -1,5 +1,6 @@
 #include "layout.h"
 #include "font.h"
+#include "font_data.h"
 #include <math.h>
 
 /*
@@ -10,18 +11,16 @@
 static int get_stix_radical_variant(mjx_font* font, unsigned int base_gid,
                                     double target_total, double* width,
                                     double* total, unsigned int* glyph_id) {
-  static const unsigned int stix_sqrt_variants[] = {1657, 1658, 1659, 1660};
+  const unsigned int* stix_sqrt_variants = NULL;
+  unsigned int stix_sqrt_count = 0;
   if (!font || !width || !total || !glyph_id) return 0;
-
-  /* STIX Two Math has larger radical glyphs, but they are not exposed by the
-   * HarfBuzz MATH variants query for U+221A in the bundled font. */
-  if (base_gid != stix_sqrt_variants[0]) return 0;
+  if (!mjx_stix_get_radical_variants(base_gid, &stix_sqrt_variants, &stix_sqrt_count)) return 0;
 
   unsigned int best_gid = stix_sqrt_variants[0];
   double best_width = mjx_font_glyph_width(font, best_gid);
   double best_total = mjx_font_glyph_height(font, best_gid);
 
-  for (unsigned int i = 0; i < sizeof(stix_sqrt_variants) / sizeof(stix_sqrt_variants[0]); i++) {
+  for (unsigned int i = 0; i < stix_sqrt_count; i++) {
     unsigned int gid = stix_sqrt_variants[i];
     double h = mjx_font_glyph_height(font, gid);
     double w = mjx_font_glyph_width(font, gid);

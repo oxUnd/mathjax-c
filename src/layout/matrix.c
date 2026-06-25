@@ -1,5 +1,6 @@
 #include "layout.h"
 #include "font.h"
+#include "font_data.h"
 #include "render.h"
 #include "parser.h"
 #include <stdlib.h>
@@ -41,45 +42,12 @@ static void set_symmetric_delim_metrics(mjx_layout_ctx* ctx, mjx_box* box,
   }
 }
 
-static int get_stix_delim_variants(uint32_t cp, const unsigned int** glyphs,
-                                   unsigned int* count) {
-  static const unsigned int paren_left[] = {
-    1064, 1301, 1302, 1303, 1304, 1305, 1306, 1307, 1308, 1309, 1310, 1311, 1312
-  };
-  static const unsigned int paren_right[] = {
-    1065, 1313, 1314, 1315, 1316, 1317, 1318, 1319, 1320, 1321, 1322, 1323, 1324
-  };
-  static const unsigned int bracket_left[] = {
-    1066, 1325, 1326, 1327, 1328, 1329, 1330, 1331, 1332, 1333, 1334, 1335, 1336
-  };
-  static const unsigned int bracket_right[] = {
-    1067, 1337, 1338, 1339, 1340, 1341, 1342, 1343, 1344, 1345, 1346, 1347, 1348
-  };
-  static const unsigned int brace_left[] = {
-    1068, 1349, 1350, 1351, 1352, 1353, 1354, 1355, 1356, 1357, 1358, 1359, 1360
-  };
-  static const unsigned int brace_right[] = {
-    1069, 1361, 1362, 1363, 1364, 1365, 1366, 1367, 1368, 1369, 1370, 1371, 1372
-  };
-
-  if (!glyphs || !count) return 0;
-  switch (cp) {
-    case '(': *glyphs = paren_left; *count = sizeof(paren_left) / sizeof(paren_left[0]); return 1;
-    case ')': *glyphs = paren_right; *count = sizeof(paren_right) / sizeof(paren_right[0]); return 1;
-    case '[': *glyphs = bracket_left; *count = sizeof(bracket_left) / sizeof(bracket_left[0]); return 1;
-    case ']': *glyphs = bracket_right; *count = sizeof(bracket_right) / sizeof(bracket_right[0]); return 1;
-    case '{': *glyphs = brace_left; *count = sizeof(brace_left) / sizeof(brace_left[0]); return 1;
-    case '}': *glyphs = brace_right; *count = sizeof(brace_right) / sizeof(brace_right[0]); return 1;
-    default: return 0;
-  }
-}
-
 static mjx_box* make_stix_delim_variant(mjx_layout_ctx* ctx, uint32_t cp,
                                         double target_height, double axis,
                                         double tolerance) {
   const unsigned int* glyphs = NULL;
   unsigned int count = 0;
-  if (!ctx || !ctx->font || !get_stix_delim_variants(cp, &glyphs, &count)) return NULL;
+  if (!ctx || !ctx->font || !mjx_stix_get_delimiter_variants(cp, &glyphs, &count)) return NULL;
 
   double scale = (ctx->font->em_size > 0.0) ? ctx->font_size / ctx->font->em_size : 1.0;
   unsigned int best_gid = 0;

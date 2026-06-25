@@ -1,5 +1,6 @@
 #include "layout.h"
 #include "font.h"
+#include "font_data.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -451,50 +452,11 @@ static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int*
 
 static mjx_box* make_font_first_accent(mjx_layout_ctx* ctx, uint32_t accent_cp,
                                        mjx_box* base) {
-  static const unsigned int hat_glyphs[] = {691, 1395, 1396, 1397, 1398, 1399};
-  static const unsigned int caron_glyphs[] = {692, 1400, 1401, 1402, 1403, 1404};
-  static const unsigned int tilde_glyphs[] = {693, 1405, 1406, 1407, 1408, 1409};
-  static const unsigned int bar_glyphs[] = {695, 1457, 1458, 1459, 1460, 1461};
-  static const unsigned int right_arrow_glyphs[] = {1277, 1478, 1479, 1480, 1481, 1482};
-  static const unsigned int left_arrow_glyphs[] = {1276, 1472, 1473, 1474, 1475, 1476};
-  static const unsigned int leftright_arrow_glyphs[] = {1283};
-
-  if (accent_cp == 0x0302 || accent_cp == 0x02C6) {
-    return make_sized_accent_glyph(ctx, hat_glyphs,
-                                   sizeof(hat_glyphs) / sizeof(hat_glyphs[0]),
-                                   base, 0.36, 1.18);
-  }
-  if (accent_cp == 0x030C || accent_cp == 0x02C7) {
-    return make_sized_accent_glyph(ctx, caron_glyphs,
-                                   sizeof(caron_glyphs) / sizeof(caron_glyphs[0]),
-                                   base, 0.36, 1.18);
-  }
-  if (accent_cp == 0x0303 || accent_cp == 0x02DC) {
-    return make_sized_accent_glyph(ctx, tilde_glyphs,
-                                   sizeof(tilde_glyphs) / sizeof(tilde_glyphs[0]),
-                                   base, 0.50, 1.18);
-  }
-  if (accent_cp == 0x0304 || accent_cp == 0x00AF || accent_cp == 0x203E) {
-    return make_sized_accent_glyph(ctx, bar_glyphs,
-                                   sizeof(bar_glyphs) / sizeof(bar_glyphs[0]),
-                                   base, 0.50, 1.18);
-  }
-  if (accent_cp == 0x20D7 || accent_cp == 0x2192) {
-    return make_sized_accent_glyph(ctx, right_arrow_glyphs,
-                                   sizeof(right_arrow_glyphs) / sizeof(right_arrow_glyphs[0]),
-                                   base, 0.50, 1.18);
-  }
-  if (accent_cp == 0x2190) {
-    return make_sized_accent_glyph(ctx, left_arrow_glyphs,
-                                   sizeof(left_arrow_glyphs) / sizeof(left_arrow_glyphs[0]),
-                                   base, 0.50, 1.18);
-  }
-  if (accent_cp == 0x2194) {
-    return make_sized_accent_glyph(ctx, leftright_arrow_glyphs,
-                                   sizeof(leftright_arrow_glyphs) / sizeof(leftright_arrow_glyphs[0]),
-                                   base, 0.50, 1.18);
-  }
-  return NULL;
+  mjx_stix_accent_variants variants;
+  if (!mjx_stix_get_accent_variants(accent_cp, &variants)) return NULL;
+  return make_sized_accent_glyph(ctx, variants.glyphs, variants.count, base,
+                                 variants.min_width_factor,
+                                 variants.stretch_tolerance);
 }
 
 mjx_box* mjx_layout_node(mjx_layout_ctx* ctx, mjx_node* node, int display) {
