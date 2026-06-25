@@ -225,6 +225,20 @@ double mjx_font_glyph_height(mjx_font* font, unsigned int glyph_id) {
   return face->glyph->metrics.height * font->scale / face->units_per_EM;
 }
 
+int mjx_font_get_glyph_id_info(mjx_font* font, unsigned int glyph_id,
+                               mjx_glyph_id_info* info) {
+  if (!font || !info || glyph_id == 0) return 0;
+  FT_Face face = (FT_Face)font->ft_face;
+  if (FT_Load_Glyph(face, glyph_id, FT_LOAD_NO_SCALE) != 0) return 0;
+
+  info->glyph_id = glyph_id;
+  info->advance_width = face->glyph->metrics.horiAdvance * font->scale / face->units_per_EM;
+  info->height = face->glyph->metrics.horiBearingY * font->scale / face->units_per_EM;
+  info->depth = (face->glyph->metrics.height - face->glyph->metrics.horiBearingY) *
+                font->scale / face->units_per_EM;
+  return 1;
+}
+
 int mjx_font_get_variants(mjx_font* font, uint32_t codepoint,
                            mjx_glyph_variant* variants, unsigned int max_count,
                            unsigned int* out_count) {

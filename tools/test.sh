@@ -1141,6 +1141,8 @@ run_test "regression quadratic radical frac"  'x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}'
 run_test "regression radical polynomial"      '\sqrt{b^2-4ac}'                      48000
 run_test "regression radical fraction"        '\sqrt{\frac{1}{1+x^2}}'              76000
 run_test "regression radical delimiters"      '\left(\sqrt{x^2+1}\right)'           82000
+run_test "regression radical denominator"     '\frac{1}{\sqrt n}'                   12000
+run_test "regression radical scripts nested"  'a^{\sqrt{x}}_{\sqrt{y}}+\sqrt{1+\sqrt{1+\sqrt{1+x}}}' 70000
 run_test "regression dense scripts"           'x^{n-k}y^k'                          25000
 run_test "regression sum binom limits"        '\sum_{k=0}^{n}\binom{n}{k}'           46000
 run_test "regression cube root fraction"      '\sqrt[3]{\frac{x+1}{y-1}}'           82000

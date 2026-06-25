@@ -77,6 +77,13 @@ typedef struct {
   double top_accent_attachment;
 } mjx_glyph_info;
 
+typedef struct {
+  unsigned int glyph_id;
+  double advance_width;
+  double height;
+  double depth;
+} mjx_glyph_id_info;
+
 /* Per-font data */
 typedef struct mjx_font {
   void* ft_library;    /* FT_Library */
@@ -163,6 +170,8 @@ unsigned char* mjx_font_render_glyph_id_size(mjx_font* font, unsigned int glyph_
 /* Get glyph metrics by glyph_id */
 double mjx_font_glyph_width(mjx_font* font, unsigned int glyph_id);
 double mjx_font_glyph_height(mjx_font* font, unsigned int glyph_id);
+int    mjx_font_get_glyph_id_info(mjx_font* font, unsigned int glyph_id,
+                                  mjx_glyph_id_info* info);
 
 #ifdef __cplusplus
 }

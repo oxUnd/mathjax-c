@@ -9,32 +9,42 @@
  */
 
 static int get_stix_radical_variant(mjx_font* font, unsigned int base_gid,
-                                    double target_total, double* width,
-                                    double* total, unsigned int* glyph_id) {
+                                    double font_scale, double target_total,
+                                    double* width, double* height,
+                                    double* depth, unsigned int* glyph_id) {
   const unsigned int* stix_sqrt_variants = NULL;
   unsigned int stix_sqrt_count = 0;
-  if (!font || !width || !total || !glyph_id) return 0;
+  if (!font || !width || !height || !depth || !glyph_id) return 0;
   if (!mjx_stix_get_radical_variants(base_gid, &stix_sqrt_variants, &stix_sqrt_count)) return 0;
 
   unsigned int best_gid = stix_sqrt_variants[0];
-  double best_width = mjx_font_glyph_width(font, best_gid);
-  double best_total = mjx_font_glyph_height(font, best_gid);
+  double best_width = 0.0;
+  double best_height = 0.0;
+  double best_depth = 0.0;
+  double best_total = 0.0;
 
   for (unsigned int i = 0; i < stix_sqrt_count; i++) {
     unsigned int gid = stix_sqrt_variants[i];
-    double h = mjx_font_glyph_height(font, gid);
-    double w = mjx_font_glyph_width(font, gid);
-    if (h <= 0.0 || w <= 0.0) continue;
+    mjx_glyph_id_info info;
+    if (!mjx_font_get_glyph_id_info(font, gid, &info)) continue;
+    double w = info.advance_width * font_scale;
+    double h = info.height * font_scale;
+    double d = info.depth * font_scale;
+    double total = h + d;
+    if (total <= 0.0 || w <= 0.0) continue;
     best_gid = gid;
     best_width = w;
-    best_total = h;
-    if (target_total <= h * 1.25) break;
+    best_height = h;
+    best_depth = d;
+    best_total = total;
+    if (target_total <= total * 1.08) break;
   }
 
   if (best_total <= 0.0 || best_width <= 0.0) return 0;
   *glyph_id = best_gid;
   *width = best_width;
-  *total = best_total;
+  *height = best_height;
+  *depth = best_depth;
   return 1;
 }
 
@@ -75,8 +85,10 @@ mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     radical_depth = ctx->font_size * 0.2;
   }
 
-  double surd_extra = fmax(radical_rule, ctx->font_size * 0.06);
-  double p = display ? ctx->font->x_height * scale : ctx->font_size * 0.12;
+  double surd_extra = (display ? mc->radical_display_style_vertical_gap
+                               : mc->radical_vertical_gap) * scale;
+  if (surd_extra <= 0.0) surd_extra = fmax(radical_rule, ctx->font_size * 0.06);
+  double p = display ? ctx->font->x_height * scale : radical_rule;
   double surd_target = radicand->height + radicand->depth +
                        radical_rule + surd_extra + p / 4.0;
   double radical_total = radical_height + radical_depth;
@@ -97,23 +109,32 @@ mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
           }
         }
         radical_glyph_id = variants[best].glyph_id;
-        radical_total = variants[best].height * scale;
-        radical_width = variants[best].advance_width * scale;
-        radical_height = fmax(0.0, radical_total - radical_depth);
-        found_variant = 1;
+        {
+          mjx_glyph_id_info info;
+          if (mjx_font_get_glyph_id_info(ctx->font, radical_glyph_id, &info)) {
+            radical_width = info.advance_width * scale;
+            radical_height = info.height * scale;
+            radical_depth = info.depth * scale;
+            radical_total = radical_height + radical_depth;
+            found_variant = 1;
+          }
+        }
       }
     }
   }
   if (!found_variant) {
     double variant_width = 0.0;
-    double variant_total = 0.0;
+    double variant_height = 0.0;
+    double variant_depth = 0.0;
     unsigned int variant_gid = 0;
-    if (get_stix_radical_variant(ctx->font, radical_glyph_id, surd_target,
-                                 &variant_width, &variant_total, &variant_gid)) {
+    if (get_stix_radical_variant(ctx->font, radical_glyph_id, scale, surd_target,
+                                 &variant_width, &variant_height,
+                                 &variant_depth, &variant_gid)) {
       radical_glyph_id = variant_gid;
-      radical_total = variant_total;
       radical_width = variant_width;
-      radical_height = fmax(0.0, radical_total - radical_depth);
+      radical_height = variant_height;
+      radical_depth = variant_depth;
+      radical_total = radical_height + radical_depth;
       found_variant = 1;
     }
   }
@@ -122,7 +143,7 @@ mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     double stretch = radical_total > 0.0 ? surd_target / radical_total : 1.0;
     radical_width *= stretch;
     radical_total = surd_target;
-    radical_depth = radicand->depth;
+    radical_depth *= stretch;
     radical_height = fmax(0.0, radical_total - radical_depth);
   }
 
@@ -133,11 +154,7 @@ mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   } else {
     q = surd_extra + p / 4.0;
   }
-  {
-    double min_clearance = ctx->font_size * 0.20;
-    if (q < min_clearance) q = min_clearance;
-  }
-  q += ctx->font_size * 0.06;
+  if (q < radical_rule) q = radical_rule;
 
   double H = radicand->height + q + radical_rule;
 
