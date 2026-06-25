@@ -2,8 +2,7 @@ build/
 .tmp-renders/
 tmp_render/
 
-comparison_all/assets/
-comparison_market/assets/
+test/diff/assets/
 
 *.o
 *.a

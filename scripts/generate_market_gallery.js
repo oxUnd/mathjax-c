@@ -7,7 +7,7 @@ const { spawn } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const testFile = path.join(root, 'tools', 'test.sh');
-const outDir = path.join(root, 'comparison_market');
+const outDir = path.join(root, 'test', 'diff');
 const assetDir = path.join(outDir, 'assets');
 const cli = process.env.CLI || path.join(root, 'build', 'mathjax-cli');
 const font = process.env.FONT || path.join(root, 'fonts', 'STIXTwoMath-Regular.ttf');
