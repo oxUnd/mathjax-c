@@ -12507,7 +12507,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 207x102 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0834.png"
+    "stderr": "Wrote 218x101 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0834.png"
   },
   {
     "section": "Test Suite / Complex Expressions",
@@ -12912,7 +12912,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 168x92 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0861.png"
+    "stderr": "Wrote 161x92 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0861.png"
   },
   {
     "section": "Test Suite / Edge Cases",
@@ -13077,7 +13077,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 292x102 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0872.png"
+    "stderr": "Wrote 304x101 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0872.png"
   },
   {
     "section": "Test Suite / Recent Layout Regressions",
@@ -13107,7 +13107,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 153x121 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0874.png"
+    "stderr": "Wrote 143x129 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0874.png"
   },
   {
     "section": "Test Suite / Recent Layout Regressions",
@@ -13167,7 +13167,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 156x127 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0878.png"
+    "stderr": "Wrote 143x135 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/0878.png"
   },
   {
     "section": "Test Suite / Recent Layout Regressions",
@@ -21882,7 +21882,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 292x102 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1459.png"
+    "stderr": "Wrote 304x101 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1459.png"
   },
   {
     "section": "Market Corpus / Algebra",
@@ -22527,7 +22527,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 341x115 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1502.png"
+    "stderr": "Wrote 353x136 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1502.png"
   },
   {
     "section": "Market Corpus / Probability",
@@ -22587,7 +22587,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 394x107 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1506.png"
+    "stderr": "Wrote 405x115 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1506.png"
   },
   {
     "section": "Market Corpus / Statistics",
@@ -22662,7 +22662,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 203x107 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1511.png"
+    "stderr": "Wrote 214x127 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1511.png"
   },
   {
     "section": "Market Corpus / Statistics",
@@ -22677,7 +22677,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 157x120 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1512.png"
+    "stderr": "Wrote 163x141 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1512.png"
   },
   {
     "section": "Market Corpus / Statistics",
@@ -23247,7 +23247,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 803x161 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1550.png"
+    "stderr": "Wrote 827x196 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1550.png"
   },
   {
     "section": "Market Corpus / Machine Learning",
@@ -23262,7 +23262,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 211x188 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1551.png"
+    "stderr": "Wrote 221x202 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1551.png"
   },
   {
     "section": "Market Corpus / Machine Learning",
@@ -23307,7 +23307,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 633x84 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1554.png"
+    "stderr": "Wrote 633x92 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1554.png"
   },
   {
     "section": "Market Corpus / Geometry",
@@ -23457,7 +23457,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 409x107 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1564.png"
+    "stderr": "Wrote 421x126 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1564.png"
   },
   {
     "section": "Market Corpus / AMS Environments",
@@ -24057,7 +24057,7 @@
     "width": null,
     "height": null,
     "stdout": "",
-    "stderr": "Wrote 407x96 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1604.png"
+    "stderr": "Wrote 400x93 PNG to /Users/xiangshouding/Work/AI/mathjax-c/test/diff/assets/1604.png"
   },
   {
     "section": "Market Corpus / Edge Syntax Variants",

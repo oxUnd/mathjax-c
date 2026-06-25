@@ -7,6 +7,38 @@
  * Uses MATH table metrics for radical placement.
  */
 
+static int get_stix_radical_variant(mjx_font* font, unsigned int base_gid,
+                                    double target_total, double* width,
+                                    double* total, unsigned int* glyph_id) {
+  static const unsigned int stix_sqrt_variants[] = {1657, 1658, 1659, 1660};
+  if (!font || !width || !total || !glyph_id) return 0;
+
+  /* STIX Two Math has larger radical glyphs, but they are not exposed by the
+   * HarfBuzz MATH variants query for U+221A in the bundled font. */
+  if (base_gid != stix_sqrt_variants[0]) return 0;
+
+  unsigned int best_gid = stix_sqrt_variants[0];
+  double best_width = mjx_font_glyph_width(font, best_gid);
+  double best_total = mjx_font_glyph_height(font, best_gid);
+
+  for (unsigned int i = 0; i < sizeof(stix_sqrt_variants) / sizeof(stix_sqrt_variants[0]); i++) {
+    unsigned int gid = stix_sqrt_variants[i];
+    double h = mjx_font_glyph_height(font, gid);
+    double w = mjx_font_glyph_width(font, gid);
+    if (h <= 0.0 || w <= 0.0) continue;
+    best_gid = gid;
+    best_width = w;
+    best_total = h;
+    if (target_total <= h * 1.25) break;
+  }
+
+  if (best_total <= 0.0 || best_width <= 0.0) return 0;
+  *glyph_id = best_gid;
+  *width = best_width;
+  *total = best_total;
+  return 1;
+}
+
 mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   mjx_math_constants* mc = &ctx->font->math_constants;
   double scale = (ctx->font && ctx->font->em_size > 0) ?
@@ -51,6 +83,7 @@ mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   double radical_total = radical_height + radical_depth;
 
   /* Check for stretchy radical variant */
+  int found_variant = 0;
   {
     mjx_glyph_variant variants[16];
     unsigned int var_count = 0;
@@ -68,7 +101,21 @@ mjx_box* mjx_layout_sqrt(mjx_layout_ctx* ctx, mjx_node* node, int display) {
         radical_total = variants[best].height * scale;
         radical_width = variants[best].advance_width * scale;
         radical_height = fmax(0.0, radical_total - radical_depth);
+        found_variant = 1;
       }
+    }
+  }
+  if (!found_variant) {
+    double variant_width = 0.0;
+    double variant_total = 0.0;
+    unsigned int variant_gid = 0;
+    if (get_stix_radical_variant(ctx->font, radical_glyph_id, surd_target,
+                                 &variant_width, &variant_total, &variant_gid)) {
+      radical_glyph_id = variant_gid;
+      radical_total = variant_total;
+      radical_width = variant_width;
+      radical_height = fmax(0.0, radical_total - radical_depth);
+      found_variant = 1;
     }
   }
 
