@@ -9,6 +9,41 @@
  * Follows TeX algorithm using MATH table metrics.
  */
 
+static mjx_box* make_fraction_rule_glyph(mjx_layout_ctx* ctx, double width,
+                                         double min_thickness) {
+  static const unsigned int overline_glyphs[] = {1457, 1458, 1459, 1460, 1461};
+  if (!ctx || !ctx->font || width <= 0.0) return NULL;
+
+  double metric_scale = (ctx->font->em_size > 0.0) ? ctx->font_size / ctx->font->em_size : 1.0;
+  unsigned int best_gid = 0;
+  double best_w = 0.0;
+  double best_h = 0.0;
+
+  for (unsigned int i = 0; i < sizeof(overline_glyphs) / sizeof(overline_glyphs[0]); i++) {
+    double w = mjx_font_glyph_width(ctx->font, overline_glyphs[i]) * metric_scale;
+    double h = mjx_font_glyph_height(ctx->font, overline_glyphs[i]) * metric_scale;
+    if (w <= 0.0 || h <= 0.0) continue;
+    best_gid = overline_glyphs[i];
+    best_w = w;
+    best_h = h;
+    if (width <= w * 1.12) break;
+  }
+  if (!best_gid) return NULL;
+
+  mjx_box* rule = mjx_box_create(MJX_BOX_GLYPH);
+  if (!rule) return NULL;
+  rule->glyph_id = best_gid;
+  rule->font_size = ctx->font_size;
+  rule->width = width;
+  rule->height = fmax(best_h, min_thickness);
+  rule->depth = 0.0;
+  rule->bb_y = ctx->font_size * 0.77;
+  if (fabs(width - best_w) > best_w * 0.08) {
+    rule->allow_nonuniform_scale = 1;
+  }
+  return rule;
+}
+
 mjx_box* mjx_layout_fraction(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   mjx_math_constants* mc = &ctx->font->math_constants;
   double saved_size = ctx->font_size;
@@ -161,8 +196,9 @@ mjx_box* mjx_layout_fraction(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   mjx_box_add_child(result, num, num_x, num_pos);
   /* Add fraction rule when requested */
   if (rule_thickness > 0) {
-    mjx_box* rule = mjx_box_create_rule(max_width, rule_thickness, 0);
-    mjx_box_add_child(result, rule, 0, -half_rule);
+    mjx_box* rule = make_fraction_rule_glyph(ctx, max_width, rule_thickness);
+    if (!rule) rule = mjx_box_create_rule(max_width, rule_thickness, 0);
+    if (rule) mjx_box_add_child(result, rule, (max_width - rule->width) / 2.0, -rule->height / 2.0);
   }
   /* Add denominator */
   mjx_box_add_child(result, denom, denom_x, denom_pos);

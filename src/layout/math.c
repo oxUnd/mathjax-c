@@ -452,6 +452,7 @@ static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int*
 static mjx_box* make_font_first_accent(mjx_layout_ctx* ctx, uint32_t accent_cp,
                                        mjx_box* base) {
   static const unsigned int hat_glyphs[] = {691, 1395, 1396, 1397, 1398, 1399};
+  static const unsigned int caron_glyphs[] = {692, 1400, 1401, 1402, 1403, 1404};
   static const unsigned int tilde_glyphs[] = {693, 1405, 1406, 1407, 1408, 1409};
   static const unsigned int bar_glyphs[] = {695, 1457, 1458, 1459, 1460, 1461};
   static const unsigned int right_arrow_glyphs[] = {1277, 1478, 1479, 1480, 1481, 1482};
@@ -461,6 +462,11 @@ static mjx_box* make_font_first_accent(mjx_layout_ctx* ctx, uint32_t accent_cp,
   if (accent_cp == 0x0302 || accent_cp == 0x02C6) {
     return make_sized_accent_glyph(ctx, hat_glyphs,
                                    sizeof(hat_glyphs) / sizeof(hat_glyphs[0]),
+                                   base, 0.36, 1.18);
+  }
+  if (accent_cp == 0x030C || accent_cp == 0x02C7) {
+    return make_sized_accent_glyph(ctx, caron_glyphs,
+                                   sizeof(caron_glyphs) / sizeof(caron_glyphs[0]),
                                    base, 0.36, 1.18);
   }
   if (accent_cp == 0x0303 || accent_cp == 0x02DC) {
@@ -846,6 +852,7 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
       uint32_t accent_cp = decode_first_codepoint(node->children[1]->text,
                                                   node->children[1]->text_len);
       if (accent_cp == 0x0302 || accent_cp == 0x02C6 ||
+          accent_cp == 0x030C || accent_cp == 0x02C7 ||
           accent_cp == 0x0303 || accent_cp == 0x02DC ||
           accent_cp == 0x0304 || accent_cp == 0x00AF ||
           accent_cp == 0x203E) {
