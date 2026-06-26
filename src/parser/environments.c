@@ -15,6 +15,9 @@ static mjx_node* make_fence(mjx_node* inner, const char* ldelim, const char* rde
 
 static mjx_node* env_matrix(mjx_parser* parser, const char* env_name, mjx_node* content) {
   (void)parser;
+  mjx_node_set_attr(content, "align", "c");
+  mjx_node_set_attr(content, "col_space", "0.7em");
+  mjx_node_set_attr(content, "row_space", "0.25em");
   if (strcmp(env_name, "pmatrix") == 0) {
     mjx_node_set_attr(content, "left", "(");
     mjx_node_set_attr(content, "right", ")");

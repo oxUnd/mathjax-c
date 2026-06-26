@@ -73,8 +73,9 @@ static void render_rule_box(mjx_renderer* r, mjx_box* box,
                              mjx_buf* buf, double offset_x, double offset_y) {
   double x = offset_x + box->bb_x;
   double y = offset_y + box->bb_y;
+  int h = (int)fmax(1.0, round(box->height + box->depth));
   mjx_buf_fill_rect(buf, (int)x, (int)y,
-                     (int)ceil(box->width), (int)ceil(box->height + box->depth),
+                     (int)ceil(box->width), h,
                      r->fg_color);
 }
 

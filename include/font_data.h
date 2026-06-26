@@ -14,6 +14,12 @@ typedef struct {
   double stretch_tolerance;
 } mjx_stix_accent_variants;
 
+typedef struct {
+  unsigned int glyph_id;
+  int is_extender;
+  double full_advance_units;
+} mjx_stix_glyph_part;
+
 int mjx_stix_get_accent_variants(uint32_t codepoint,
                                  mjx_stix_accent_variants* variants);
 int mjx_stix_get_delimiter_variants(uint32_t codepoint,
@@ -24,6 +30,9 @@ int mjx_stix_get_radical_variants(unsigned int base_glyph_id,
                                   unsigned int* count);
 int mjx_stix_get_fraction_rule_variants(const unsigned int** glyphs,
                                         unsigned int* count);
+int mjx_stix_get_horizontal_parts(uint32_t codepoint,
+                                  const mjx_stix_glyph_part** parts,
+                                  unsigned int* count);
 
 #ifdef __cplusplus
 }

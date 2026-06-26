@@ -245,6 +245,7 @@ mjx_box* mjx_layout_delimited(mjx_layout_ctx* ctx, mjx_box* inner,
     if (inner) mjx_box_destroy(inner);
     return NULL;
   }
+  result->tex_class = MJX_TEXCLASS_INNER;
 
   double scale = (ctx->font && ctx->font->em_size > 0) ?
     ctx->font_size / ctx->font->em_size : 1.0;
@@ -275,7 +276,7 @@ mjx_box* mjx_layout_delimited(mjx_layout_ctx* ctx, mjx_box* inner,
     if (ref) {
       double delim_center = (ref->depth - ref->height) / 2.0;
       double inner_center = (inner->depth - inner->height) / 2.0;
-      inner_y = delim_center - inner_center - axis * 0.12;
+      inner_y = delim_center - inner_center;
     }
   }
 

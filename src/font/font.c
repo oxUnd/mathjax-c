@@ -89,6 +89,9 @@ int mjx_font_get_glyph(mjx_font* font, uint32_t codepoint, mjx_glyph_info* info)
   info->advance_width = face->glyph->metrics.horiAdvance * font->scale / face->units_per_EM;
   info->height = face->glyph->metrics.horiBearingY * font->scale / face->units_per_EM;
   info->depth = (face->glyph->metrics.height - face->glyph->metrics.horiBearingY) * font->scale / face->units_per_EM;
+  info->bbox_left = face->glyph->metrics.horiBearingX * font->scale / face->units_per_EM;
+  info->bbox_right = (face->glyph->metrics.horiBearingX + face->glyph->metrics.width) *
+                     font->scale / face->units_per_EM;
 
   /* Get italic correction from HarfBuzz MATH table */
   info->italic_correction = 0;
@@ -236,6 +239,9 @@ int mjx_font_get_glyph_id_info(mjx_font* font, unsigned int glyph_id,
   info->height = face->glyph->metrics.horiBearingY * font->scale / face->units_per_EM;
   info->depth = (face->glyph->metrics.height - face->glyph->metrics.horiBearingY) *
                 font->scale / face->units_per_EM;
+  info->bbox_left = face->glyph->metrics.horiBearingX * font->scale / face->units_per_EM;
+  info->bbox_right = (face->glyph->metrics.horiBearingX + face->glyph->metrics.width) *
+                     font->scale / face->units_per_EM;
   return 1;
 }
 

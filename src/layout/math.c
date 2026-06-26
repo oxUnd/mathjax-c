@@ -123,7 +123,16 @@ static int is_accent_node(mjx_node* node) {
           cp == 0x02C6 || cp == 0x02DC || cp == 0x00AF ||
           cp == 0x02D9 || cp == 0x00A8 || cp == 0x20D7 ||
           cp == 0x203E || cp == 0x2190 || cp == 0x2192 ||
-          cp == 0x2194);
+          cp == 0x2194 || cp == 0x23B4 || cp == 0x23B5 ||
+          cp == 0x23DC || cp == 0x23DD || cp == 0x23DE ||
+          cp == 0x23DF);
+}
+
+static int is_under_accent_node(mjx_node* node) {
+  if (!node || node->type != MJX_NODE_MO || !node->text) return 0;
+  uint32_t cp = decode_first_codepoint(node->text, node->text_len);
+  return cp == 0x203E || cp == 0x2190 || cp == 0x2192 ||
+         cp == 0x2194 || cp == 0x23B5 || cp == 0x23DD || cp == 0x23DF;
 }
 
 static double delimiter_axis_shift(mjx_layout_ctx* ctx, mjx_box* glyph, uint32_t cp) {
@@ -150,11 +159,38 @@ static mjx_box* shift_operator_glyph(mjx_box* glyph, double shift) {
   return wrapper;
 }
 
-static mjx_box* make_stretched_arrow(mjx_layout_ctx* ctx, mjx_node* node, double target_w) {
-  if (!ctx || !node || !node->text) return NULL;
-  uint32_t cp = decode_first_codepoint(node->text, node->text_len);
+static mjx_box* make_stretched_arrow_codepoint(mjx_layout_ctx* ctx, uint32_t cp, double target_w) {
+  if (!ctx) return NULL;
   double min_w = ctx->font_size * 1.2;
   if (target_w < min_w) target_w = min_w;
+
+  if (cp == 0x21CB || cp == 0x21CC) {
+    uint32_t top_cp = (cp == 0x21CC) ? 0x21C0 : 0x21BC;
+    uint32_t bottom_cp = (cp == 0x21CC) ? 0x21BD : 0x21C1;
+    mjx_box* top = make_stretched_arrow_codepoint(ctx, top_cp, target_w);
+    mjx_box* bottom = make_stretched_arrow_codepoint(ctx, bottom_cp, target_w);
+    if (!top || !bottom) {
+      if (top) mjx_box_destroy(top);
+      if (bottom) mjx_box_destroy(bottom);
+      return NULL;
+    }
+
+    mjx_box* row = mjx_box_create(MJX_BOX_HBOX);
+    if (!row) {
+      mjx_box_destroy(top);
+      mjx_box_destroy(bottom);
+      return NULL;
+    }
+    row->tex_class = MJX_TEXCLASS_REL;
+
+    double gap = ctx->font_size * 0.12;
+    double total_w = fmax(top->width, bottom->width);
+    mjx_box_add_child(row, top, (total_w - top->width) / 2.0, -gap);
+    mjx_box_add_child(row, bottom, (total_w - bottom->width) / 2.0, gap);
+    mjx_box_hpack(row);
+    row->tex_class = MJX_TEXCLASS_REL;
+    return row;
+  }
 
   int left_head = 0, right_head = 0;
   int double_rule = 0;
@@ -172,6 +208,10 @@ static mjx_box* make_stretched_arrow(mjx_layout_ctx* ctx, mjx_node* node, double
     case 0x21A0: right_head = 1; two_head = 1; break;
     case 0x21A9:
     case 0x21AA:
+    case 0x21BC:
+    case 0x21BD:
+    case 0x21C0:
+    case 0x21C1:
       break;
     default: return NULL;
   }
@@ -205,7 +245,23 @@ static mjx_box* make_stretched_arrow(mjx_layout_ctx* ctx, mjx_node* node, double
     mjx_glyph_part parts[32];
     unsigned int np = 0;
     double ic = 0.0;
-    if (mjx_font_get_horizontal_parts(ctx->font, cp, parts, 32, &np, &ic) && np > 0) {
+    int have_parts = mjx_font_get_horizontal_parts(ctx->font, cp, parts, 32, &np, &ic);
+    if (!have_parts || np == 0) {
+      const mjx_stix_glyph_part* stix_parts = NULL;
+      unsigned int stix_count = 0;
+      if (mjx_stix_get_horizontal_parts(cp, &stix_parts, &stix_count) &&
+          stix_parts && stix_count > 0) {
+        np = stix_count < 32 ? stix_count : 32;
+        for (unsigned int i = 0; i < np; i++) {
+          parts[i].glyph_id = stix_parts[i].glyph_id;
+          parts[i].is_extender = stix_parts[i].is_extender;
+          parts[i].full_advance = stix_parts[i].full_advance_units *
+                                  ctx->font_size / 1000.0;
+        }
+        have_parts = 1;
+      }
+    }
+    if (have_parts && np > 0) {
       double total_adv = 0.0;
       double extender_adv = 0.0;
       int has_extender = 0;
@@ -411,6 +467,13 @@ static mjx_box* make_stretched_arrow(mjx_layout_ctx* ctx, mjx_node* node, double
   return row;
 }
 
+static mjx_box* make_stretched_arrow(mjx_layout_ctx* ctx, mjx_node* node, double target_w) {
+  if (!ctx || !node || !node->text) return NULL;
+  return make_stretched_arrow_codepoint(ctx,
+                                        decode_first_codepoint(node->text, node->text_len),
+                                        target_w);
+}
+
 static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int* glyphs,
                                          unsigned int count, mjx_box* base,
                                          double min_width_em, double stretch_tolerance) {
@@ -423,6 +486,7 @@ static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int*
   unsigned int best_gid = 0;
   double best_w = 0.0;
   double best_h = 0.0;
+  double best_depth = 0.0;
 
   for (unsigned int i = 0; i < count; i++) {
     double w = mjx_font_glyph_width(ctx->font, glyphs[i]) * metric_scale;
@@ -431,6 +495,14 @@ static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int*
     best_gid = glyphs[i];
     best_w = w;
     best_h = h;
+    {
+      mjx_glyph_id_info info;
+      if (mjx_font_get_glyph_id_info(ctx->font, glyphs[i], &info)) {
+        best_depth = info.depth * metric_scale;
+      } else {
+        best_depth = 0.0;
+      }
+    }
     if (target_w <= w * stretch_tolerance) break;
   }
   if (best_gid == 0) return NULL;
@@ -442,6 +514,7 @@ static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int*
   accent->width = best_w;
   accent->height = best_h;
   accent->depth = 0.0;
+  accent->bb_y = -best_depth;
   accent->tex_class = MJX_TEXCLASS_ORD;
 
   if (target_w > best_w * stretch_tolerance) {
@@ -451,6 +524,23 @@ static mjx_box* make_sized_accent_glyph(mjx_layout_ctx* ctx, const unsigned int*
   return accent;
 }
 
+static void align_decorator_as_under(mjx_layout_ctx* ctx, mjx_box* box) {
+  if (!ctx || !box || box->glyph_id == 0) return;
+
+  double metric_scale = (ctx->font && ctx->font->em_size > 0.0) ?
+    box->font_size / ctx->font->em_size : 1.0;
+  mjx_glyph_id_info info;
+  if (!mjx_font_get_glyph_id_info(ctx->font, box->glyph_id, &info)) return;
+
+  double visual_h = (info.height + info.depth) * metric_scale;
+  double y_max = info.height * metric_scale;
+  if (visual_h <= 0.0) return;
+
+  box->bb_y = y_max;
+  box->height = 0.0;
+  box->depth = visual_h;
+}
+
 static mjx_box* make_font_first_accent(mjx_layout_ctx* ctx, uint32_t accent_cp,
                                        mjx_box* base) {
   mjx_stix_accent_variants variants;
@@ -458,6 +548,31 @@ static mjx_box* make_font_first_accent(mjx_layout_ctx* ctx, uint32_t accent_cp,
   return make_sized_accent_glyph(ctx, variants.glyphs, variants.count, base,
                                  variants.min_width_factor,
                                  variants.stretch_tolerance);
+}
+
+static mjx_box* make_natural_accent(mjx_layout_ctx* ctx, uint32_t accent_cp) {
+  mjx_stix_accent_variants variants;
+  if (!mjx_stix_get_accent_variants(accent_cp, &variants) ||
+      !variants.glyphs || variants.count == 0) {
+    return NULL;
+  }
+  return make_sized_accent_glyph(ctx, variants.glyphs, 1, NULL, 0.0, 1.0);
+}
+
+static double base_top_accent_x(mjx_layout_ctx* ctx, mjx_box* base) {
+  if (!ctx || !ctx->font || !base || base->codepoint == 0) {
+    return base ? base->width / 2.0 : 0.0;
+  }
+
+  mjx_glyph_info info;
+  memset(&info, 0, sizeof(info));
+  if (!mjx_font_get_glyph(ctx->font, base->codepoint, &info) ||
+      info.top_accent_attachment <= 0.0) {
+    return base->width / 2.0;
+  }
+
+  double scale = (ctx->font->em_size > 0.0) ? base->font_size / ctx->font->em_size : 1.0;
+  return info.top_accent_attachment * scale;
 }
 
 mjx_box* mjx_layout_node(mjx_layout_ctx* ctx, mjx_node* node, int display) {
@@ -492,13 +607,28 @@ mjx_box* mjx_layout_node(mjx_layout_ctx* ctx, mjx_node* node, int display) {
         double w = 0;
         const char* wa = mjx_node_get_attr(node, "width");
         if (wa) {
-          if (strstr(wa, "em")) w = atof(wa) * ctx->font_size;
+          if (strstr(wa, "mu")) w = atof(wa) * ctx->font_size / 18.0;
+          else if (strstr(wa, "em")) w = atof(wa) * ctx->font_size;
           else if (strstr(wa, "pt")) w = atof(wa) * ctx->font_size / 72.0;
           else w = atof(wa) * ctx->font_size;
         }
         space->width = w;
-        space->height = ctx->font_size * 0.1;
-        space->depth = ctx->font_size * 0.1;
+        {
+          const char* ha = mjx_node_get_attr(node, "height");
+          const char* da = mjx_node_get_attr(node, "depth");
+          if (ha) {
+            if (strstr(ha, "mu")) space->height = atof(ha) * ctx->font_size / 18.0;
+            else if (strstr(ha, "em")) space->height = atof(ha) * ctx->font_size;
+            else if (strstr(ha, "pt")) space->height = atof(ha) * ctx->font_size / 72.0;
+            else space->height = atof(ha) * ctx->font_size;
+          }
+          if (da) {
+            if (strstr(da, "mu")) space->depth = atof(da) * ctx->font_size / 18.0;
+            else if (strstr(da, "em")) space->depth = atof(da) * ctx->font_size;
+            else if (strstr(da, "pt")) space->depth = atof(da) * ctx->font_size / 72.0;
+            else space->depth = atof(da) * ctx->font_size;
+          }
+        }
         return space;
       }
 
@@ -725,6 +855,14 @@ mjx_box* mjx_layout_row(mjx_layout_ctx* ctx, mjx_node** children, size_t count, 
     if (cur_class == MJX_TEXCLASS_NONE) {
       cur_class = MJX_TEXCLASS_ORD;
     }
+    if (cur_class == MJX_TEXCLASS_BIN &&
+        (prev_class == MJX_TEXCLASS_NONE ||
+         prev_class == MJX_TEXCLASS_BIN ||
+         prev_class == MJX_TEXCLASS_REL ||
+         prev_class == MJX_TEXCLASS_OPEN ||
+         prev_class == MJX_TEXCLASS_PUNCT)) {
+      cur_class = MJX_TEXCLASS_ORD;
+    }
 
     int spacing_level = script_level;
     if (spacing_level == 0 && ctx->script_depth > 0) spacing_level = 1;
@@ -752,6 +890,27 @@ static mjx_box* layout_operator(mjx_layout_ctx* ctx, mjx_node* node, int display
   double fs = mjx_current_font_size(ctx, node->script_level);
   double saved = ctx->font_size;
   ctx->font_size = fs;
+
+  {
+    const char* glyph_id_attr = mjx_node_get_attr(node, "glyph_id");
+    if (glyph_id_attr && glyph_id_attr[0]) {
+      unsigned int glyph_id = (unsigned int)strtoul(glyph_id_attr, NULL, 10);
+      mjx_glyph_id_info info;
+      if (glyph_id != 0 && mjx_font_get_glyph_id_info(ctx->font, glyph_id, &info)) {
+        mjx_box* box = mjx_box_create(MJX_BOX_GLYPH);
+        if (box) {
+          box->glyph_id = glyph_id;
+          box->font_size = ctx->font_size;
+          box->width = info.advance_width;
+          box->height = info.height;
+          box->depth = info.depth;
+          box->tex_class = node->tex_class;
+          ctx->font_size = saved;
+          return box;
+        }
+      }
+    }
+  }
 
   /* For large ops in display style, try to use a larger glyph variant */
   if (node->mo_largeop && display && node->script_level == 0 && node->text_len > 0) {
@@ -803,6 +962,10 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
   mjx_math_constants* mc = ctx->mc;
   double saved = ctx->font_size;
   int accent_mode = (node->type == MJX_NODE_MOVER && is_accent_node(node->children[1]));
+  int under_accent_mode = (node->type == MJX_NODE_MUNDER && is_under_accent_node(node->children[1]));
+  const char* accent_kind = (accent_mode || under_accent_mode) ?
+    mjx_node_get_attr(node->children[1], "accent_kind") : NULL;
+  int normal_accent = accent_kind && strcmp(accent_kind, "normal") == 0;
 
   ctx->font_size = saved * mjx_font_script_scale(ctx->font, 1) * 0.7;
   ctx->script_depth++;
@@ -814,16 +977,27 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
     if (accent_mode) {
       uint32_t accent_cp = decode_first_codepoint(node->children[1]->text,
                                                   node->children[1]->text_len);
-      if (accent_cp == 0x0302 || accent_cp == 0x02C6 ||
-          accent_cp == 0x030C || accent_cp == 0x02C7 ||
-          accent_cp == 0x0303 || accent_cp == 0x02DC ||
-          accent_cp == 0x0304 || accent_cp == 0x00AF ||
-          accent_cp == 0x203E) {
-        ctx->font_size = saved * 0.72;
+      if (normal_accent) {
+        ctx->font_size = (accent_cp == 0x20D7) ? saved * 0.42 : saved;
+        over = (accent_cp == 0x20D7) ? make_font_first_accent(ctx, accent_cp, NULL)
+                                     : make_natural_accent(ctx, accent_cp);
+      } else if (accent_cp == 0x0302 || accent_cp == 0x02C6 ||
+                 accent_cp == 0x030C || accent_cp == 0x02C7 ||
+                 accent_cp == 0x0303 || accent_cp == 0x02DC ||
+                 accent_cp == 0x0304 || accent_cp == 0x00AF ||
+                 accent_cp == 0x203E) {
+        ctx->font_size = saved;
         over = make_font_first_accent(ctx, accent_cp, base);
       } else if (accent_cp == 0x20D7 || accent_cp == 0x2192 ||
                  accent_cp == 0x2190 || accent_cp == 0x2194) {
-        ctx->font_size = saved * 0.58;
+        ctx->font_size = normal_accent ? saved : saved * 0.58;
+        over = normal_accent ? make_natural_accent(ctx, accent_cp)
+                             : make_stretched_arrow_codepoint(ctx, accent_cp,
+                                                             base->width + saved * 0.18);
+        if (!over) over = make_font_first_accent(ctx, accent_cp, base);
+      } else if (accent_cp == 0x23B4 || accent_cp == 0x23DC ||
+                 accent_cp == 0x23DE) {
+        ctx->font_size = saved;
         over = make_font_first_accent(ctx, accent_cp, base);
       }
       if (!over) ctx->font_size = saved * 0.7;
@@ -831,7 +1005,23 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
     if (!over) over = mjx_layout_node(ctx, node->children[1], 0);
     if (accent_mode && over) over->depth = 0;
   } else if (node->type == MJX_NODE_MUNDER) {
-    under = mjx_layout_node(ctx, node->children[1], 0);
+    if (under_accent_mode) {
+      uint32_t accent_cp = decode_first_codepoint(node->children[1]->text,
+                                                  node->children[1]->text_len);
+      if (accent_cp == 0x2190 || accent_cp == 0x2192 ||
+          accent_cp == 0x2194) {
+        ctx->font_size = saved * 0.58;
+        under = make_stretched_arrow_codepoint(ctx, accent_cp, base->width + saved * 0.18);
+        if (!under) under = make_font_first_accent(ctx, accent_cp, base);
+      } else {
+        ctx->font_size = saved;
+        under = make_font_first_accent(ctx, accent_cp, base);
+        align_decorator_as_under(ctx, under);
+      }
+      if (!under) ctx->font_size = saved * 0.7;
+    }
+    if (!under) under = mjx_layout_node(ctx, node->children[1], 0);
+    if (under_accent_mode && under) under->depth = 0;
   } else if (node->type == MJX_NODE_MUNDEROVER) {
     under = mjx_layout_node(ctx, node->children[1], 0);
     if (node->child_count > 2) {
@@ -857,6 +1047,16 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
   if (accent_mode) {
     upper_gap = saved * 0.035;
   }
+  if (under_accent_mode) {
+    lower_gap = saved * 0.035;
+  }
+  if (!accent_mode && !under_accent_mode && node->children[0] &&
+      (node->children[0]->type == MJX_NODE_MOVER ||
+       node->children[0]->type == MJX_NODE_MUNDER) &&
+      !mjx_node_get_attr(node->children[0], "movablelimits")) {
+    upper_gap = saved * 0.22;
+    lower_gap = saved * 0.22;
+  }
   double total_w = base->width;
 
   if (over && over->width > total_w) total_w = over->width;
@@ -874,6 +1074,12 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
 
   if (over) {
     double over_x = (total_w - over->width) / 2.0;
+    if (normal_accent) {
+      double base_x = (total_w - base->width) / 2.0;
+      over_x = base_x + base_top_accent_x(ctx, base) - over->width / 2.0;
+      if (over_x < 0.0) over_x = 0.0;
+      if (over_x + over->width > total_w) over_x = total_w - over->width;
+    }
     double over_y;
     if (accent_mode) {
       over_y = -(base->height + upper_gap + over->depth);

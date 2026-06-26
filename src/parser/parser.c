@@ -21,6 +21,32 @@ typedef struct {
   struct mjx_parser* parser_ref;
 } parse_state;
 
+typedef struct {
+  const char* cmd;
+  uint32_t codepoint;
+  unsigned int glyph_id;
+  mjx_texclass tex_class;
+} special_glyph_entry;
+
+static const special_glyph_entry SPECIAL_GLYPHS[] = {
+  {"varnothing", 0x2205, 1626, MJX_TEXCLASS_ORD},       /* uni2205.var */
+  {"smallsetminus", 0x2216, 1653, MJX_TEXCLASS_BIN},    /* uni2216.var */
+  {"smallfrown", 0x2322, 2046, MJX_TEXCLASS_BIN},       /* uni2322.var */
+  {"smallsmile", 0x2323, 2048, MJX_TEXCLASS_BIN},       /* uni2323.var */
+  {"varpropto", 0x221D, 1678, MJX_TEXCLASS_REL},        /* uni221D.var */
+  {"thicksim", 0x223C, 1761, MJX_TEXCLASS_REL},         /* uni223C.var */
+  {"lvertneqq", 0x2268, 1816, MJX_TEXCLASS_REL},        /* uni2268.var */
+  {"gvertneqq", 0x2269, 1818, MJX_TEXCLASS_REL},        /* uni2269.var */
+  {"varsubsetneq", 0x228A, 1869, MJX_TEXCLASS_REL},     /* uni228A.var */
+  {"varsupsetneq", 0x228B, 1871, MJX_TEXCLASS_REL},     /* uni228B.var */
+  {"varsubsetneqq", 0x2ACB, 3119, MJX_TEXCLASS_REL},    /* uni2ACB.var */
+  {"varsupsetneqq", 0x2ACC, 3121, MJX_TEXCLASS_REL},    /* uni2ACC.var */
+  {"shortmid", 0x2223, 1685, MJX_TEXCLASS_REL},         /* uni2223.var */
+  {"nshortmid", 0x2224, 1687, MJX_TEXCLASS_REL},        /* uni2224.var */
+  {"shortparallel", 0x2225, 1689, MJX_TEXCLASS_REL},    /* uni2225.var */
+  {"nshortparallel", 0x2226, 1691, MJX_TEXCLASS_REL},   /* uni2226.var */
+};
+
 static mjx_node* parse_expression(parse_state* state, int stop_at_brace);
 
 /* Unwrap single-child MROW — if node is MROW with exactly 1 child and no
@@ -43,6 +69,7 @@ static mjx_node* make_operator_node(parse_state* state, uint32_t codepoint,
 static mjx_node* make_identifier(parse_state* state, const char* text);
 static mjx_node* make_number(parse_state* state, const char* text);
 static mjx_node* make_operator_str(parse_state* state, const char* text);
+static size_t utf8_char_len(const char* text, size_t remaining);
 
 static void encode_utf8(uint32_t cp, char out[8]) {
   if (cp < 0x80) {
@@ -215,6 +242,38 @@ static char* read_optional_arg(parse_state* state) {
   return NULL;
 }
 
+static char* read_dimension_argument(parse_state* state) {
+  skip_spaces(state);
+  if (!*state->pos) return NULL;
+  if (*state->pos == '{' || *state->pos == '\\') return read_argument(state);
+
+  const char* start = state->pos;
+  if (*state->pos == '+' || *state->pos == '-') state->pos++;
+
+  int saw_digit = 0;
+  while (isdigit((unsigned char)*state->pos)) {
+    saw_digit = 1;
+    state->pos++;
+  }
+  if (*state->pos == '.') {
+    state->pos++;
+    while (isdigit((unsigned char)*state->pos)) {
+      saw_digit = 1;
+      state->pos++;
+    }
+  }
+
+  if (!saw_digit) return read_argument(state);
+  while (isalpha((unsigned char)*state->pos)) state->pos++;
+
+  size_t len = (size_t)(state->pos - start);
+  char* buf = (char*)malloc(len + 1);
+  if (!buf) return NULL;
+  memcpy(buf, start, len);
+  buf[len] = '\0';
+  return buf;
+}
+
 static mjx_node* make_operator_node(parse_state* state, uint32_t codepoint,
                                      mjx_texclass tex_class, int is_largeop) {
   (void)state;
@@ -248,6 +307,26 @@ static mjx_node* make_operator_node(parse_state* state, uint32_t codepoint,
   return node;
 }
 
+static mjx_node* make_glyph_operator_node(parse_state* state, uint32_t codepoint,
+                                           unsigned int glyph_id,
+                                           mjx_texclass tex_class) {
+  mjx_node* node = make_operator_node(state, codepoint, tex_class, 0);
+  if (!node) return NULL;
+
+  char glyph_id_text[32];
+  snprintf(glyph_id_text, sizeof(glyph_id_text), "%u", glyph_id);
+  mjx_node_set_attr(node, "glyph_id", glyph_id_text);
+  return node;
+}
+
+static const special_glyph_entry* lookup_special_glyph(const char* cmd) {
+  size_t count = sizeof(SPECIAL_GLYPHS) / sizeof(SPECIAL_GLYPHS[0]);
+  for (size_t i = 0; i < count; i++) {
+    if (strcmp(SPECIAL_GLYPHS[i].cmd, cmd) == 0) return &SPECIAL_GLYPHS[i];
+  }
+  return NULL;
+}
+
 static mjx_node* make_identifier(parse_state* state, const char* text) {
   (void)state;
   mjx_node* node = mjx_node_create(MJX_NODE_MI);
@@ -264,6 +343,57 @@ static mjx_node* make_number(parse_state* state, const char* text) {
   node->text = strdup(text);
   node->text_len = strlen(text);
   return node;
+}
+
+static uint32_t math_bold_codepoint(uint32_t cp) {
+  if (cp >= 'A' && cp <= 'Z') return 0x1D400 + (cp - 'A');
+  if (cp >= 'a' && cp <= 'z') return 0x1D41A + (cp - 'a');
+  if (cp >= '0' && cp <= '9') return 0x1D7CE + (cp - '0');
+  return cp;
+}
+
+static void apply_math_bold(mjx_node* node) {
+  if (!node) return;
+
+  if ((node->type == MJX_NODE_MI || node->type == MJX_NODE_MN ||
+       node->type == MJX_NODE_MTEXT) &&
+      node->text && node->text_len > 0) {
+    size_t cap = node->text_len * 4 + 1;
+    char* out = (char*)malloc(cap);
+    if (out) {
+      size_t pos = 0;
+      const char* p = node->text;
+      const char* end = node->text + node->text_len;
+      while (p < end) {
+        size_t remaining = (size_t)(end - p);
+        size_t clen = utf8_char_len(p, remaining);
+        uint32_t cp = decode_first_codepoint(p, clen);
+        uint32_t bold = math_bold_codepoint(cp);
+        char encoded[8];
+        encode_utf8(bold, encoded);
+        size_t elen = strlen(encoded);
+        if (pos + elen + 1 > cap) {
+          cap = (cap + elen + 16) * 2;
+          char* grown = (char*)realloc(out, cap);
+          if (!grown) { free(out); out = NULL; break; }
+          out = grown;
+        }
+        memcpy(out + pos, encoded, elen);
+        pos += elen;
+        p += clen;
+      }
+      if (out) {
+        out[pos] = '\0';
+        free(node->text);
+        node->text = out;
+        node->text_len = pos;
+      }
+    }
+  }
+
+  for (size_t i = 0; i < node->child_count; i++) {
+    apply_math_bold(node->children[i]);
+  }
 }
 
 static mjx_node* make_operator_str(parse_state* state, const char* text) {
@@ -536,12 +666,18 @@ static mjx_node* handle_scripts(parse_state* state, mjx_node* base) {
     }
   }
 
-  if ((has_sup || has_sub) && base && base->type == MJX_NODE_MO &&
-      limits_mode != -1 &&
+  int is_movable_operator = 0;
+  if (base && base->type == MJX_NODE_MO) {
+    is_movable_operator =
+      base->mo_movablelimits || (base->mo_largeop && largeop_default_limits(base));
+  } else if (base) {
+    const char* movablelimits = mjx_node_get_attr(base, "movablelimits");
+    is_movable_operator = movablelimits && strcmp(movablelimits, "true") == 0;
+  }
+
+  if ((has_sup || has_sub) && base && limits_mode != -1 &&
       (limits_mode == 1 ||
-       ((base->mo_movablelimits ||
-         (base->mo_largeop && largeop_default_limits(base))) &&
-        state->display && state->style_level == 0))) {
+       (is_movable_operator && state->display && state->style_level == 0))) {
     if (has_sup && has_sub) {
       mjx_node* underover = mjx_node_create(MJX_NODE_MUNDEROVER);
       if (underover) {
@@ -602,10 +738,49 @@ static mjx_node* handle_operatorname(parse_state* state) {
     op->text = strdup(arg);
     op->text_len = strlen(arg);
     op->tex_class = MJX_TEXCLASS_OP;
-    op->mo_movablelimits = 1;
+    op->mo_movablelimits = 0;
   }
   free(arg);
   return op;
+}
+
+static mjx_node* make_text_operator(const char* text, int movablelimits) {
+  mjx_node* node = mjx_node_create(MJX_NODE_MO);
+  if (!node) return NULL;
+  node->text = strdup(text);
+  node->text_len = strlen(text);
+  node->tex_class = MJX_TEXCLASS_OP;
+  node->mo_movablelimits = movablelimits;
+  return node;
+}
+
+static mjx_node* make_rule_operator(void) {
+  mjx_node* rule = mjx_node_create(MJX_NODE_MO);
+  if (!rule) return NULL;
+  rule->text = strdup("\xE2\x80\xBE");
+  rule->text_len = 3;
+  rule->tex_class = MJX_TEXCLASS_ORD;
+  return rule;
+}
+
+static mjx_node* make_varlim_operator(int is_sup) {
+  mjx_node* node = mjx_node_create(is_sup ? MJX_NODE_MOVER : MJX_NODE_MUNDER);
+  if (!node) return NULL;
+
+  mjx_node* lim = make_text_operator("lim", 1);
+  mjx_node* rule = make_rule_operator();
+  if (!lim || !rule) {
+    if (lim) mjx_node_destroy(lim);
+    if (rule) mjx_node_destroy(rule);
+    mjx_node_destroy(node);
+    return NULL;
+  }
+
+  node->tex_class = MJX_TEXCLASS_OP;
+  mjx_node_set_attr(node, "movablelimits", "true");
+  mjx_node_append(node, lim);
+  mjx_node_append(node, rule);
+  return node;
 }
 
 static const char* largeop_text_name(const char* cmd) {
@@ -660,20 +835,20 @@ static mjx_node* handle_braceop(parse_state* state, int is_underbrace) {
   else { utf8[0] = 0xE0 | (brace_cp >> 12); utf8[1] = 0x80 | ((brace_cp >> 6) & 0x3F); utf8[2] = 0x80 | (brace_cp & 0x3F); utf8[3] = '\0'; }
   brace->text = strdup(utf8);
   brace->text_len = strlen(utf8);
+  brace->tex_class = MJX_TEXCLASS_ORD;
 
   if (is_underbrace) {
     mjx_node* result = mjx_node_create(MJX_NODE_MUNDER);
     if (result) {
       mjx_node_append(result, expr);
-      if (text) {
-        mjx_node* inner = mjx_node_create(MJX_NODE_MUNDER);
-        if (inner) {
-          mjx_node_append(inner, brace);
-          mjx_node_append(inner, text);
-          mjx_node_append(result, inner);
-        }
-      } else {
-        mjx_node_append(result, brace);
+      mjx_node_append(result, brace);
+    }
+    if (text) {
+      mjx_node* outer = mjx_node_create(MJX_NODE_MUNDER);
+      if (outer) {
+        mjx_node_append(outer, result);
+        mjx_node_append(outer, text);
+        return outer;
       }
     }
     return result;
@@ -681,15 +856,14 @@ static mjx_node* handle_braceop(parse_state* state, int is_underbrace) {
     mjx_node* result = mjx_node_create(MJX_NODE_MOVER);
     if (result) {
       mjx_node_append(result, expr);
-      if (text) {
-        mjx_node* inner = mjx_node_create(MJX_NODE_MOVER);
-        if (inner) {
-          mjx_node_append(inner, brace);
-          mjx_node_append(inner, text);
-          mjx_node_append(result, inner);
-        }
-      } else {
-        mjx_node_append(result, brace);
+      mjx_node_append(result, brace);
+    }
+    if (text) {
+      mjx_node* outer = mjx_node_create(MJX_NODE_MOVER);
+      if (outer) {
+        mjx_node_append(outer, result);
+        mjx_node_append(outer, text);
+        return outer;
       }
     }
     return result;
@@ -763,7 +937,10 @@ static mjx_node* handle_overunder_accent(parse_state* state, uint32_t cp, int is
   }
   mjx_node_append(result, content);
   mjx_node* accent = make_mo_codepoint(cp, MJX_TEXCLASS_ORD);
-  if (accent) mjx_node_append(result, accent);
+  if (accent) {
+    mjx_node_set_attr(accent, "accent_kind", "wide");
+    mjx_node_append(result, accent);
+  }
   return result;
 }
 
@@ -1050,6 +1227,7 @@ static mjx_node* handle_overline_underline(parse_state* state, int is_overline) 
       rule->text = strdup("\xE2\x80\xBE");
       rule->text_len = 3;
       rule->tex_class = MJX_TEXCLASS_ORD;
+      mjx_node_set_attr(rule, "accent_kind", is_overline ? "overline" : "underline");
       mjx_node_append(node, rule);
     }
   }
@@ -1100,7 +1278,8 @@ static mjx_node* handle_color(parse_state* state) {
 }
 
 static mjx_node* handle_hspace(parse_state* state) {
-  char* arg = read_argument(state);
+  if (*state->pos == '*') state->pos++;
+  char* arg = read_dimension_argument(state);
   mjx_node* space = mjx_node_create(MJX_NODE_MSPACE);
   if (space && arg) {
     char attr[64];
@@ -1234,9 +1413,10 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
 
   if (strcmp(cmd, ",") == 0) return make_space_node("0.1667em");
   if (strcmp(cmd, ":") == 0) return make_space_node("0.2222em");
+  if (strcmp(cmd, ">") == 0) return make_space_node("0.2222em");
   if (strcmp(cmd, ";") == 0) return make_space_node("0.2778em");
   if (strcmp(cmd, "!") == 0) return make_space_node("-0.1667em");
-  if (strcmp(cmd, " ") == 0) return make_space_node("0.3333em");
+  if (strcmp(cmd, " ") == 0 || strcmp(cmd, "space") == 0) return make_space_node("0.3333em");
   if (strcmp(cmd, "quad") == 0) return make_space_node("1em");
   if (strcmp(cmd, "qquad") == 0) return make_space_node("2em");
   if (strcmp(cmd, "enspace") == 0) return make_space_node("0.5em");
@@ -1250,12 +1430,21 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
       strcmp(cmd, "nobreakspace") == 0) return make_space_node("1em");
   if (strcmp(cmd, "hskip") == 0 || strcmp(cmd, "kern") == 0 ||
       strcmp(cmd, "mkern") == 0 || strcmp(cmd, "mskip") == 0) {
-    char* width = read_argument(state);
+    char* width = read_dimension_argument(state);
     mjx_node* node = make_space_node(width ? width : "0em");
     free(width);
     return node;
   }
   if (strcmp(cmd, "allowbreak") == 0) return make_space_node("0em");
+
+  {
+    const special_glyph_entry* special = lookup_special_glyph(cmd);
+    if (special) {
+      return make_glyph_operator_node(state, special->codepoint,
+                                      special->glyph_id,
+                                      special->tex_class);
+    }
+  }
 
   if (mjx_lookup_greek(cmd, &cp, &tex_class))
     return make_operator_node(state, cp, tex_class, 0);
@@ -1268,6 +1457,9 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
 
   if (mjx_lookup_largeop(cmd, &cp, &tex_class, &is_operator)) {
     if (cp == 0) {
+      if (strcmp(cmd, "varlimsup") == 0) return make_varlim_operator(1);
+      if (strcmp(cmd, "varliminf") == 0) return make_varlim_operator(0);
+
       mjx_node* node = mjx_node_create(MJX_NODE_MO);
       if (node) {
         const char* text_name = largeop_text_name(cmd);
@@ -1297,7 +1489,7 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
     int starred = (*state->pos == '*');
     if (starred) state->pos++;
     mjx_node* result = handle_operatorname(state);
-    if (result && starred) result->mo_movablelimits = 0;
+    if (result && starred) result->mo_movablelimits = 1;
     return result;
   }
   if (strcmp(cmd, "DeclareMathOperator") == 0) {
@@ -1414,14 +1606,11 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
   if (strcmp(cmd, "boldsymbol") == 0 || strcmp(cmd, "mathbf") == 0) {
     char* arg = read_argument(state);
     if (!arg) return NULL;
-    mjx_node* node = mjx_node_create(MJX_NODE_MSTYLE);
-    if (node) {
-      parse_state s = *state; s.input = arg; s.pos = arg;
-      mjx_node* content = parse_expression(&s, 0);
-      if (content) mjx_node_append(node, content);
-    }
+    parse_state s = *state; s.input = arg; s.pos = arg;
+    mjx_node* node = parse_expression(&s, 0);
+    if (node) apply_math_bold(node);
     free(arg);
-    return node;
+    return node ? node : mjx_node_create(MJX_NODE_MROW);
   }
 
   if (strcmp(cmd, "pmb") == 0 || strcmp(cmd, "mathds") == 0 ||
@@ -1502,6 +1691,7 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
       case 0x20D7: cp = 0x20D7; break; /* vec */
       default: break;
     }
+    int is_wide_accent = (strcmp(cmd, "widehat") == 0 || strcmp(cmd, "widetilde") == 0);
     char* arg = read_argument(state);
     if (!arg) return NULL;
     parse_state as = *state; as.input = arg; as.pos = arg;
@@ -1510,7 +1700,10 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
     if (accent && arg_node) {
       mjx_node_append(accent, arg_node);
       mjx_node* accent_mo = make_operator_node(state, cp, MJX_TEXCLASS_ORD, 0);
-      if (accent_mo) mjx_node_append(accent, accent_mo);
+      if (accent_mo) {
+        mjx_node_set_attr(accent_mo, "accent_kind", is_wide_accent ? "wide" : "normal");
+        mjx_node_append(accent, accent_mo);
+      }
     }
     free(arg);
     return accent;

@@ -73,6 +73,8 @@ typedef struct {
   double advance_width;
   double height;
   double depth;
+  double bbox_left;
+  double bbox_right;
   double italic_correction;
   double top_accent_attachment;
 } mjx_glyph_info;
@@ -82,6 +84,8 @@ typedef struct {
   double advance_width;
   double height;
   double depth;
+  double bbox_left;
+  double bbox_right;
 } mjx_glyph_id_info;
 
 /* Per-font data */
