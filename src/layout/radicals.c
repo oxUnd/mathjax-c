@@ -213,9 +213,7 @@ mjx_box* mjx_layout_root(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   double degree_bottom_raise = mc->radical_degree_bottom_raise_percent;
   double kern_after = mc->radical_kern_after_degree * scale;
 
-  /* Layout the degree in script style */
-  double saved = ctx->font_size;
-  ctx->font_size *= mjx_font_script_scale(ctx->font, 1);
+  /* Layout the degree using its inherited MathJax scriptlevel. */
   ctx->script_depth++;
 
   mjx_box* degree = mjx_layout_node(ctx, node->children[1], display);
@@ -240,11 +238,9 @@ mjx_box* mjx_layout_root(mjx_layout_ctx* ctx, mjx_node* node, int display) {
       mjx_box_add_child(result, degree, degree_x, degree_y);
       mjx_box_add_child(result, base, base_x, 0);
       mjx_box_hpack(result);
-      ctx->font_size = saved;
       return result;
     }
   }
 
-  ctx->font_size = saved;
   return base;
 }

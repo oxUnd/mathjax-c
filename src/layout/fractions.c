@@ -99,10 +99,8 @@ mjx_box* mjx_layout_fraction(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     if (rule_thickness > visual_rule_max) rule_thickness = visual_rule_max;
   }
 
-  ctx->font_size = saved_size * mjx_font_script_scale(ctx->font, 1);
   mjx_box* num = mjx_layout_node(ctx, node->children[0], 0);
   mjx_box* denom = mjx_layout_node(ctx, node->children[1], 0);
-  ctx->font_size = saved_size;
 
   if (!num || !denom) {
     if (num) mjx_box_destroy(num);

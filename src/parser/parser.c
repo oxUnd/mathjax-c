@@ -17,6 +17,8 @@ typedef struct {
   const char* pos;
   int display;
   int style_level;
+  int style_display;
+  int explicit_style;
   int limits_mode; /* -1=nolimits, 1=limits, 0=default */
   struct mjx_parser* parser_ref;
 } parse_state;
@@ -70,6 +72,18 @@ static mjx_node* make_identifier(parse_state* state, const char* text);
 static mjx_node* make_number(parse_state* state, const char* text);
 static mjx_node* make_operator_str(parse_state* state, const char* text);
 static size_t utf8_char_len(const char* text, size_t remaining);
+
+static void apply_parse_style(parse_state* state, mjx_node* node) {
+  if (!state || !node || !state->explicit_style) return;
+  mjx_node_set_attr(node, "displaystyle", state->style_display ? "true" : "false");
+  if (state->style_level == 1) {
+    mjx_node_set_attr(node, "scriptlevel", "1");
+  } else if (state->style_level >= 2) {
+    mjx_node_set_attr(node, "scriptlevel", "2");
+  } else {
+    mjx_node_set_attr(node, "scriptlevel", "0");
+  }
+}
 
 static void encode_utf8(uint32_t cp, char out[8]) {
   if (cp < 0x80) {
@@ -1891,10 +1905,30 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
     return content ? content : mjx_node_create(MJX_NODE_MROW);
   }
 
-  if (strcmp(cmd, "displaystyle") == 0) { state->style_level = 0; return NULL; }
-  if (strcmp(cmd, "textstyle") == 0) { state->style_level = 0; return NULL; }
-  if (strcmp(cmd, "scriptstyle") == 0) { state->style_level = 1; return NULL; }
-  if (strcmp(cmd, "scriptscriptstyle") == 0) { state->style_level = 2; return NULL; }
+  if (strcmp(cmd, "displaystyle") == 0) {
+    state->style_level = 0;
+    state->style_display = 1;
+    state->explicit_style = 1;
+    return NULL;
+  }
+  if (strcmp(cmd, "textstyle") == 0) {
+    state->style_level = 0;
+    state->style_display = 0;
+    state->explicit_style = 1;
+    return NULL;
+  }
+  if (strcmp(cmd, "scriptstyle") == 0) {
+    state->style_level = 1;
+    state->style_display = 0;
+    state->explicit_style = 1;
+    return NULL;
+  }
+  if (strcmp(cmd, "scriptscriptstyle") == 0) {
+    state->style_level = 2;
+    state->style_display = 0;
+    state->explicit_style = 1;
+    return NULL;
+  }
   if (strcmp(cmd, "limits") == 0) return NULL;
   if (strcmp(cmd, "nolimits") == 0) return NULL;
 
@@ -2296,6 +2330,7 @@ static mjx_node* parse_expression(parse_state* state, int stop_at_brace) {
 
     mjx_node* node = parse_group(state);
     if (node) {
+      apply_parse_style(state, node);
       mjx_node_append(row, node);
     } else {
       break;
@@ -2333,6 +2368,8 @@ mjx_node* mjx_parser_parse_latex(mjx_parser* parser, const char* latex, int disp
   state.pos = latex;
   state.display = display;
   state.style_level = 0;
+  state.style_display = display;
+  state.explicit_style = 0;
   state.parser_ref = parser;
 
   skip_spaces(&state);

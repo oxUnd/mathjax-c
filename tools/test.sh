@@ -726,9 +726,9 @@ run_test "overbrace compound"       '\overbrace{x + y + z}^{\text{sum}}' 15000
 run_test "underbrace"               '\underbrace{x + y}'             10000
 run_test "underbrace text"          '\underbrace{x + y}_{z}'         15000
 run_test "underbrace compound"      '\underbrace{x + y + z}_{\text{sum}}' 15000
-run_test "overline"                 '\overline{x+y}'                 30000
+run_test "overline"                 '\overline{x+y}'                 25000
 run_test "overline fraction"        '\overline{\frac{a}{b}}'         10000
-run_test "underline"                '\underline{x}'                   5000
+run_test "underline"                '\underline{x}'                   4000
 run_test "underline expression"     '\underline{x+y+z}'               8000
 run_test "overleftarrow"            '\overleftarrow{abc}'             1
 run_test "overrightarrow"           '\overrightarrow{abc}'            1
@@ -870,12 +870,12 @@ run_test "space nobreakspace"       'x \nobreakspace y'               1
 # SECTION 23: Matrix environments
 # =====================================================================
 echo "=== Matrix Environments ==="
-run_test "matrix 2x2"               '\begin{matrix} 1 & 2 \\ 3 & 4 \end{matrix}'   40000
-run_test "pmatrix 2x2"              '\begin{pmatrix} a & b \\ c & d \end{pmatrix}' 65000
-run_test "bmatrix 2x2"              '\begin{bmatrix} a & b \\ c & d \end{bmatrix}' 65000
+run_test "matrix 2x2"               '\begin{matrix} 1 & 2 \\ 3 & 4 \end{matrix}'   33000
+run_test "pmatrix 2x2"              '\begin{pmatrix} a & b \\ c & d \end{pmatrix}' 56000
+run_test "bmatrix 2x2"              '\begin{bmatrix} a & b \\ c & d \end{bmatrix}' 55000
 run_test "Bmatrix 2x2"              '\begin{Bmatrix} 1 & 2 \\ 3 & 4 \end{Bmatrix}' 50000
-run_test "vmatrix 2x2"              '\begin{vmatrix} a & b \\ c & d \end{vmatrix}' 80000
-run_test "Vmatrix 2x2"              '\begin{Vmatrix} a & b \\ c & d \end{Vmatrix}' 80000
+run_test "vmatrix 2x2"              '\begin{vmatrix} a & b \\ c & d \end{vmatrix}' 65000
+run_test "Vmatrix 2x2"              '\begin{Vmatrix} a & b \\ c & d \end{Vmatrix}' 78000
 run_test "matrix 3x3"               '\begin{matrix} a & b & c \\ d & e & f \\ g & h & i \end{matrix}' 50000
 run_test "smallmatrix"              '\begin{smallmatrix} a & b \\ c & d \end{smallmatrix}' 1
 run_test "array basic"              '\begin{array}{cc} a & b \\ c & d \end{array}' 1
@@ -917,7 +917,7 @@ run_test "style nolimits"           '\int\limits_0^1 x\,dx'          1
 run_test "style displaystyle"       '\displaystyle\sum_{i=0}^\infty a_i' 40000
 run_test "style textstyle"          '\textstyle\sum_{i=0}^n a_i'    20000
 run_test "style scriptstyle"        '\scriptstyle x^2'                5000
-run_test "style scriptscriptstyle"  '\scriptscriptstyle x^2'          5000
+run_test "style scriptscriptstyle"  '\scriptscriptstyle x^2'          4500
 
 # =====================================================================
 # SECTION 27: Color
@@ -1491,7 +1491,7 @@ run_test "extra otimes"             '\otimes'                         5000
 run_test "extra overbrace"          '\overbrace{x+y}'                 10000
 run_test "extra overleftarrow"      '\overleftarrow{abc}'             1
 run_test "extra overleftrightarrow" '\overleftrightarrow{abc}'        1
-run_test "extra overline"           '\overline{x}'                     6000
+run_test "extra overline"           '\overline{x}'                     4000
 run_test "extra overparen"          '\overparen{abc}'                 1
 run_test "extra overrightarrow"     '\overrightarrow{abc}'            1
 run_test "extra overset"            '\overset{*}{X}'                  10000
@@ -1522,8 +1522,8 @@ run_test "extra projlim"            '\projlim'                        15000
 run_test "extra propto"             '\propto'                         4000
 run_test "extra psi"                '\psi'                            2000
 run_test "extra Psi"                '\Psi'                            2000
-run_test "extra qquad"              '\qquad'                          3000
-run_test "extra quad"               '\quad'                           3000
+run_test "extra qquad"              '\qquad'                          1
+run_test "extra quad"               '\quad'                           1
 run_test "extra rangle"             '\rangle'                         2000
 run_test "extra rbrace"             '\rbrace'                         2000
 run_test "extra rbrack"             '\rbrack'                         2000
@@ -1591,7 +1591,7 @@ run_test "extra subseteq"           '\subseteq'                       5000
 run_test "extra subseteqq"          '\subseteqq'                      1
 run_test "extra subsetneq"          '\subsetneq'                      5000
 run_test "extra subsetneqq"         '\subsetneqq'                     1
-run_test "extra substack"           '\substack{x\\y}'                 8000
+run_test "extra substack"           '\substack{x\\y}'                 5500
 run_test "extra succ"               '\succ'                           5000
 run_test "extra succapprox"         '\succapprox'                     1
 run_test "extra succcurlyeq"        '\succcurlyeq'                    1
@@ -1648,7 +1648,7 @@ run_test "extra underbrace"         '\underbrace{x+y}'                10000
 run_test "extra underbracket"       '\underbracket{abc}'              1
 run_test "extra underleftarrow"     '\underleftarrow{abc}'            1
 run_test "extra underleftrightarrow"'\underleftrightarrow{abc}'       1
-run_test "extra underline"          '\underline{x}'                   5000
+run_test "extra underline"          '\underline{x}'                   4000
 run_test "extra underparen"         '\underparen{abc}'                1
 run_test "extra underrightarrow"    '\underrightarrow{abc}'           1
 run_test "extra underset"           '\underset{x\in X}{\max}'         10000

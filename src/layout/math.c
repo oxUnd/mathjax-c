@@ -10,7 +10,10 @@ mjx_layout_ctx* mjx_layout_ctx_create(mjx_font* font) {
   if (!ctx) return NULL;
   ctx->font = font;
   ctx->fallback_font = NULL;
-  ctx->font_size = font->em_size;
+  ctx->base_font_size = font->em_size;
+  ctx->font_size = ctx->base_font_size;
+  ctx->script_size_multiplier = 1.0 / sqrt(2.0);
+  ctx->script_min_size = 0.4 * ctx->base_font_size;
   ctx->mu_unit = ctx->font_size / 18.0;
   ctx->mc = &font->math_constants;
   return ctx;
@@ -21,11 +24,13 @@ void mjx_layout_ctx_destroy(mjx_layout_ctx* ctx) {
 }
 
 double mjx_current_font_size(mjx_layout_ctx* ctx, int script_level) {
-  double size = ctx->font_size;
-  if (script_level >= 2) {
-    size *= mjx_font_script_scale(ctx->font, 2);
-  } else if (script_level >= 1) {
-    size *= mjx_font_script_scale(ctx->font, 1);
+  double size = ctx->base_font_size > 0.0 ? ctx->base_font_size : ctx->font_size;
+  int level = script_level;
+  if (level < 0) level = 0;
+  if (level > 2) level = 2;
+  if (level > 0) {
+    size *= pow(ctx->script_size_multiplier > 0.0 ? ctx->script_size_multiplier : 1.0 / sqrt(2.0), level);
+    if (size < ctx->script_min_size) size = ctx->script_min_size;
   }
   return size;
 }
@@ -33,6 +38,103 @@ double mjx_current_font_size(mjx_layout_ctx* ctx, int script_level) {
 int mjx_is_display_style(int display, int script_level) {
   if (script_level > 0) return 0;
   return display;
+}
+
+static int is_accent_node(mjx_node* node);
+static int is_under_accent_node(mjx_node* node);
+
+static int attr_bool(const char* value, int fallback) {
+  if (!value) return fallback;
+  if (strcmp(value, "true") == 0 || strcmp(value, "1") == 0) return 1;
+  if (strcmp(value, "false") == 0 || strcmp(value, "0") == 0) return 0;
+  return fallback;
+}
+
+static int attr_int(const char* value, int fallback) {
+  if (!value || !value[0]) return fallback;
+  return atoi(value);
+}
+
+static int node_is_accent_child(mjx_node* node, const char* attr_name) {
+  const char* explicit_attr = mjx_node_get_attr(node, attr_name);
+  if (explicit_attr) return attr_bool(explicit_attr, 0);
+  if (!node || node->type != MJX_NODE_MO || !node->text) return 0;
+  return is_accent_node(node) || is_under_accent_node(node);
+}
+
+static void apply_styles_rec(mjx_node* node, int display, int level, int prime);
+
+static void apply_child_styles(mjx_node* node, int display, int level, int prime) {
+  if (!node) return;
+
+  switch (node->type) {
+    case MJX_NODE_MFRAC: {
+      int child_level = level;
+      if (!display || level > 0) child_level++;
+      if (node->child_count > 0) apply_styles_rec(node->children[0], 0, child_level, prime);
+      if (node->child_count > 1) apply_styles_rec(node->children[1], 0, child_level, 1);
+      return;
+    }
+
+    case MJX_NODE_MSUB:
+    case MJX_NODE_MSUP:
+    case MJX_NODE_MSUBSUP:
+    case MJX_NODE_MMULTISCRIPTS:
+      if (node->child_count > 0) apply_styles_rec(node->children[0], display, level, prime);
+      for (size_t i = 1; i < node->child_count; i++) {
+        int child_prime = prime || (i == 1 && node->type != MJX_NODE_MSUP);
+        apply_styles_rec(node->children[i], 0, level + 1, child_prime);
+      }
+      return;
+
+    case MJX_NODE_MROOT:
+      if (node->child_count > 0) apply_styles_rec(node->children[0], display, level, 1);
+      if (node->child_count > 1) apply_styles_rec(node->children[1], 0, level + 2, prime);
+      return;
+
+    case MJX_NODE_MUNDER:
+    case MJX_NODE_MOVER:
+    case MJX_NODE_MUNDEROVER: {
+      if (node->child_count > 0) {
+        int has_over = (node->type == MJX_NODE_MOVER || node->type == MJX_NODE_MUNDEROVER);
+        apply_styles_rec(node->children[0], display, level, prime || has_over);
+      }
+      for (size_t i = 1; i < node->child_count; i++) {
+        const char* attr = (node->type == MJX_NODE_MUNDER || (node->type == MJX_NODE_MUNDEROVER && i == 1))
+          ? "accentunder" : "accent";
+        int child_level = node_is_accent_child(node->children[i], attr) ? level : level + 1;
+        int child_prime = prime || (i == 1 && node->type != MJX_NODE_MOVER);
+        apply_styles_rec(node->children[i], 0, child_level, child_prime);
+      }
+      return;
+    }
+
+    default:
+      for (size_t i = 0; i < node->child_count; i++) {
+        apply_styles_rec(node->children[i], display, level, prime);
+      }
+      return;
+  }
+}
+
+static void apply_styles_rec(mjx_node* node, int display, int level, int prime) {
+  if (!node) return;
+
+  const char* display_attr = mjx_node_get_attr(node, "displaystyle");
+  const char* level_attr = mjx_node_get_attr(node, "scriptlevel");
+  if (display_attr) display = attr_bool(display_attr, display);
+  if (level_attr) level = attr_int(level_attr, level);
+  if (level < 0) level = 0;
+
+  node->display_style = display;
+  node->script_level = level;
+  node->prime_style = prime;
+
+  apply_child_styles(node, display, level, prime);
+}
+
+void mjx_layout_apply_styles(mjx_node* node, int display) {
+  apply_styles_rec(node, display, 0, 0);
 }
 
 static double delimiter_axis_shift(mjx_layout_ctx* ctx, mjx_box* glyph, uint32_t cp);
@@ -575,7 +677,7 @@ static double base_top_accent_x(mjx_layout_ctx* ctx, mjx_box* base) {
   return info.top_accent_attachment * scale;
 }
 
-mjx_box* mjx_layout_node(mjx_layout_ctx* ctx, mjx_node* node, int display) {
+static mjx_box* layout_node_inner(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   if (!node) return NULL;
 
   switch (node->type) {
@@ -831,6 +933,19 @@ mjx_box* mjx_layout_node(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     default:
       return mjx_layout_row(ctx, node->children, node->child_count, display);
   }
+}
+
+mjx_box* mjx_layout_node(mjx_layout_ctx* ctx, mjx_node* node, int display) {
+  if (!ctx || !node) return NULL;
+  double saved_size = ctx->font_size;
+  double saved_mu = ctx->mu_unit;
+  ctx->font_size = mjx_current_font_size(ctx, node->script_level);
+  ctx->mu_unit = ctx->font_size / 18.0;
+  mjx_box* box = layout_node_inner(ctx, node, node->display_style);
+  ctx->font_size = saved_size;
+  ctx->mu_unit = saved_mu;
+  (void)display;
+  return box;
 }
 
 mjx_box* mjx_layout_row(mjx_layout_ctx* ctx, mjx_node** children, size_t count, int display) {

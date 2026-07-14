@@ -160,6 +160,11 @@ mjx_box* mjx_layout(mjx_ctx* ctx, mjx_node* node) {
     ctx->last_error = MJX_ERR_INVALID_ARG;
     return NULL;
   }
+  ctx->layout->base_font_size = ctx->font->em_size;
+  ctx->layout->font_size = ctx->layout->base_font_size;
+  ctx->layout->script_min_size = 0.4 * ctx->layout->base_font_size;
+  ctx->layout->mu_unit = ctx->layout->font_size / 18.0;
+  mjx_layout_apply_styles(node, ctx->display_style);
   return mjx_layout_node(ctx->layout, node, ctx->display_style);
 }
 

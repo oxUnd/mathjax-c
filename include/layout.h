@@ -72,7 +72,10 @@ typedef struct mjx_layout_ctx {
   mjx_font* font;
   mjx_font* fallback_font;
   mjx_math_constants* mc;
+  double base_font_size;
   double font_size;
+  double script_size_multiplier;
+  double script_min_size;
   double mu_unit;     /* 1mu = 1/18 em */
   int script_depth;   /* nonzero while laying out scripts/limits */
 } mjx_layout_ctx;
@@ -115,6 +118,7 @@ void     mjx_box_hpack(mjx_box* hbox);
 /* Style helpers */
 double mjx_current_font_size(mjx_layout_ctx* ctx, int script_level);
 int    mjx_is_display_style(int display, int script_level);
+void   mjx_layout_apply_styles(mjx_node* node, int display);
 
 #ifdef __cplusplus
 }

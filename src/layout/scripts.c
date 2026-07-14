@@ -9,7 +9,6 @@
 
 mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   mjx_math_constants* mc = &ctx->font->math_constants;
-  double saved = ctx->font_size;
 
   if (node->child_count < 2) {
     /* No base or scripts, just layout what we have */
@@ -23,7 +22,6 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   mjx_box* sub = NULL;
   mjx_box* sup = NULL;
 
-  ctx->font_size = saved * mjx_font_script_scale(ctx->font, 1) * 0.88;
   ctx->script_depth++;
 
   /* Determine which children are subscript and superscript */
@@ -39,7 +37,6 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   }
 
   ctx->script_depth--;
-  ctx->font_size = saved;
 
   /* Calculate script positions */
   double sub_shift = mc->subscript_shift_down;
