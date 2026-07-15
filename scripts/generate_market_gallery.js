@@ -172,6 +172,14 @@ const marketCases = [
   ['AMS Environments', 'vmatrix determinant', '\\begin{vmatrix}a&b\\\\c&d\\end{vmatrix}'],
   ['AMS Environments', 'Vmatrix norm', '\\begin{Vmatrix}x\\\\y\\end{Vmatrix}'],
 
+  ['Multiline Complex', 'three line aligned calculus', '\\begin{aligned}F(x)&=\\int_0^x e^{-t^2}\\,dt\\\\F\\prime(x)&=e^{-x^2}\\\\F\\prime\\prime(x)&=-2xe^{-x^2}\\end{aligned}'],
+  ['Multiline Complex', 'three line piecewise recurrence', 'a_n=\\begin{cases}1,&n=0\\\\a_{n-1}+2n-1,&n>0\\\\0,&n<0\\end{cases}'],
+  ['Multiline Complex', 'three line optimization system', '\\begin{aligned}\\nabla f(x^*)+A^T\\lambda+B^T\\mu&=0\\\\Ax^*-b&=0\\\\\\mu_i(Bx^*-c)_i&=0\\end{aligned}'],
+  ['Multiline Complex', 'four line maxwell system', '\\begin{aligned}\\nabla\\cdot\\mathbf E&=\\frac{\\rho}{\\varepsilon_0}\\\\\\nabla\\cdot\\mathbf B&=0\\\\\\nabla\\times\\mathbf E&=-\\frac{\\partial\\mathbf B}{\\partial t}\\\\\\nabla\\times\\mathbf B&=\\mu_0\\mathbf J+\\mu_0\\varepsilon_0\\frac{\\partial\\mathbf E}{\\partial t}\\end{aligned}'],
+  ['Multiline Complex', 'four line matrix transform', '\\begin{pmatrix}x\\prime\\\\y\\prime\\\\z\\prime\\\\1\\end{pmatrix}=\\begin{pmatrix}a_{11}&a_{12}&a_{13}&t_x\\\\a_{21}&a_{22}&a_{23}&t_y\\\\a_{31}&a_{32}&a_{33}&t_z\\\\0&0&0&1\\end{pmatrix}\\begin{pmatrix}x\\\\y\\\\z\\\\1\\end{pmatrix}'],
+  ['Multiline Complex', 'four line bayes table', '\\begin{array}{rcl}P(A\\mid B)&=&\\dfrac{P(B\\mid A)P(A)}{P(B)}\\\\P(B)&=&\\sum_i P(B\\mid A_i)P(A_i)\\\\\\mathbb E[X]&=&\\sum_x xP(X=x)\\\\\\operatorname{Var}(X)&=&\\mathbb E[X^2]-\\mathbb E[X]^2\\end{array}'],
+  ['Multiline Complex', 'four line nested scripts', '\\begin{aligned}S_0&=\\sum_{i=1}^{n}x_i\\\\S_1&=\\sum_{i=1}^{n}i\\,x_i^{2}\\\\S_2&=\\sum_{i=1}^{n}\\frac{x_i^{i+1}}{1+x_i^2}\\\\T&=\\sqrt{S_0^2+S_1^2+S_2^2}\\end{aligned}'],
+
   ['Accents And Decorations', 'widehat vector', '\\widehat{abcdef}'],
   ['Accents And Decorations', 'widetilde vector', '\\widetilde{abcdef}'],
   ['Accents And Decorations', 'overline long', '\\overline{x_1+x_2+\\cdots+x_n}'],
@@ -256,7 +264,7 @@ function renderCase(testCase) {
     child.stdout.on('data', (chunk) => { stdout += chunk; });
     child.stderr.on('data', (chunk) => { stderr += chunk; });
     child.on('close', (code) => {
-      const sizeMatch = stdout.match(/Wrote\s+([0-9]+)x([0-9]+)\s+PNG/);
+      const sizeMatch = `${stdout}\n${stderr}`.match(/Wrote\s+([0-9]+)x([0-9]+)\s+PNG/);
       resolve({
         ...testCase,
         ok: code === 0 && fs.existsSync(imagePath),
