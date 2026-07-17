@@ -231,11 +231,6 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     }
   }
 
-  if (integral_base) {
-    if (sup) sup_shift = base->height * 0.48;
-    if (sub) sub_shift = base->depth * 0.40;
-  }
-
   double sup_y = -sup_shift;
   double sub_y = sub_shift;
 
@@ -253,6 +248,16 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     }
   }
 
+  if (integral_base) {
+    if (sup) {
+      double sup_visual_center = (sup->depth - sup->height) / 2.0;
+      sup_y = -base->height - sup_visual_center;
+    }
+    if (sub) {
+      sub_y = base->depth - sub->depth;
+    }
+  }
+
   double script_x = x + base->width;
   double sup_x = script_x + base_italic_corr;
   double sub_x = script_x;
@@ -260,8 +265,8 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     double visual_right = 0.0;
     if (box_visual_right(ctx, base, &visual_right)) {
       double integral_right = x + visual_right;
-      sup_x = integral_right - ctx->font_size * 0.02 + base_italic_corr;
-      sub_x = integral_right - ctx->font_size * 0.18;
+      sup_x = integral_right + ctx->font_size * 0.04 + base_italic_corr;
+      sub_x = integral_right - ctx->font_size * 0.25;
     }
   }
 
