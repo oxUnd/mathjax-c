@@ -478,6 +478,7 @@ static mjx_node* handle_left_right(parse_state* state, const char* cmd) {
       delim[di++] = *state->pos++;
     }
     if (di == 0 && *state->pos && di < 60) {
+      delim[di++] = '\\';
       delim[di++] = *state->pos++;
     }
     delim[di] = '\0';
@@ -508,6 +509,7 @@ static mjx_node* handle_left_right(parse_state* state, const char* cmd) {
               right_delim[ri++] = *state->pos++;
             }
           } else if (*state->pos) {
+            right_delim[ri++] = '\\';
             right_delim[ri++] = *state->pos++;
           }
         } else if (*state->pos) {

@@ -9834,10 +9834,10 @@
     "id": "0656",
     "image": "assets/0656.png",
     "ok": true,
-    "width": 99,
-    "height": 36,
+    "width": 108,
+    "height": 37,
     "stdout": "",
-    "stderr": "Wrote 99x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0656.png"
+    "stderr": "Wrote 108x37 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0656.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -9849,10 +9849,10 @@
     "id": "0657",
     "image": "assets/0657.png",
     "ok": true,
-    "width": 34,
+    "width": 37,
     "height": 34,
     "stdout": "",
-    "stderr": "Wrote 34x34 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0657.png"
+    "stderr": "Wrote 37x34 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0657.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -9864,10 +9864,10 @@
     "id": "0658",
     "image": "assets/0658.png",
     "ok": true,
-    "width": 55,
+    "width": 59,
     "height": 40,
     "stdout": "",
-    "stderr": "Wrote 55x40 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0658.png"
+    "stderr": "Wrote 59x40 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0658.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -9879,10 +9879,10 @@
     "id": "0659",
     "image": "assets/0659.png",
     "ok": true,
-    "width": 99,
+    "width": 86,
     "height": 36,
     "stdout": "",
-    "stderr": "Wrote 99x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0659.png"
+    "stderr": "Wrote 86x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0659.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -9894,10 +9894,10 @@
     "id": "0660",
     "image": "assets/0660.png",
     "ok": true,
-    "width": 99,
+    "width": 89,
     "height": 36,
     "stdout": "",
-    "stderr": "Wrote 99x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0660.png"
+    "stderr": "Wrote 89x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0660.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -9909,10 +9909,10 @@
     "id": "0661",
     "image": "assets/0661.png",
     "ok": true,
-    "width": 99,
-    "height": 36,
+    "width": 101,
+    "height": 37,
     "stdout": "",
-    "stderr": "Wrote 99x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0661.png"
+    "stderr": "Wrote 101x37 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0661.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -9924,10 +9924,10 @@
     "id": "0662",
     "image": "assets/0662.png",
     "ok": true,
-    "width": 99,
-    "height": 36,
+    "width": 108,
+    "height": 37,
     "stdout": "",
-    "stderr": "Wrote 99x36 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0662.png"
+    "stderr": "Wrote 108x37 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0662.png"
   },
   {
     "section": "Test Suite / Font Commands",
@@ -10599,10 +10599,10 @@
     "id": "0707",
     "image": "assets/0707.png",
     "ok": true,
-    "width": 168,
-    "height": 92,
+    "width": 136,
+    "height": 93,
     "stdout": "",
-    "stderr": "Wrote 168x92 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0707.png"
+    "stderr": "Wrote 136x93 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0707.png"
   },
   {
     "section": "Test Suite / Matrix Environments",
@@ -11424,10 +11424,10 @@
     "id": "0762",
     "image": "assets/0762.png",
     "ok": true,
-    "width": 29,
-    "height": 49,
+    "width": 37,
+    "height": 34,
     "stdout": "",
-    "stderr": "Wrote 29x49 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0762.png"
+    "stderr": "Wrote 37x34 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0762.png"
   },
   {
     "section": "Test Suite / Cancel",
@@ -11439,10 +11439,10 @@
     "id": "0763",
     "image": "assets/0763.png",
     "ok": true,
-    "width": 29,
-    "height": 121,
+    "width": 37,
+    "height": 84,
     "stdout": "",
-    "stderr": "Wrote 29x121 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0763.png"
+    "stderr": "Wrote 37x84 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0763.png"
   },
   {
     "section": "Test Suite / Cancel",
@@ -11454,10 +11454,10 @@
     "id": "0764",
     "image": "assets/0764.png",
     "ok": true,
-    "width": 29,
-    "height": 49,
+    "width": 37,
+    "height": 34,
     "stdout": "",
-    "stderr": "Wrote 29x49 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0764.png"
+    "stderr": "Wrote 37x34 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0764.png"
   },
   {
     "section": "Test Suite / Cancel",
@@ -11469,10 +11469,10 @@
     "id": "0765",
     "image": "assets/0765.png",
     "ok": true,
-    "width": 29,
-    "height": 49,
+    "width": 37,
+    "height": 34,
     "stdout": "",
-    "stderr": "Wrote 29x49 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0765.png"
+    "stderr": "Wrote 37x34 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0765.png"
   },
   {
     "section": "Test Suite / Cancel",
@@ -21564,10 +21564,10 @@
     "id": "1438",
     "image": "assets/1438.png",
     "ok": true,
-    "width": 29,
-    "height": 49,
+    "width": 37,
+    "height": 34,
     "stdout": "",
-    "stderr": "Wrote 29x49 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1438.png"
+    "stderr": "Wrote 37x34 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1438.png"
   },
   {
     "section": "Test Suite / Additional MathJax Commands (not yet implemented)",
@@ -22509,10 +22509,10 @@
     "id": "1501",
     "image": "assets/1501.png",
     "ok": true,
-    "width": 426,
+    "width": 425,
     "height": 75,
     "stdout": "",
-    "stderr": "Wrote 426x75 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1501.png"
+    "stderr": "Wrote 425x75 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1501.png"
   },
   {
     "section": "Market Corpus / Probability",
@@ -22524,10 +22524,10 @@
     "id": "1502",
     "image": "assets/1502.png",
     "ok": true,
-    "width": 449,
+    "width": 448,
     "height": 123,
     "stdout": "",
-    "stderr": "Wrote 449x123 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1502.png"
+    "stderr": "Wrote 448x123 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1502.png"
   },
   {
     "section": "Market Corpus / Probability",
@@ -22539,10 +22539,10 @@
     "id": "1503",
     "image": "assets/1503.png",
     "ok": true,
-    "width": 469,
+    "width": 467,
     "height": 60,
     "stdout": "",
-    "stderr": "Wrote 469x60 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1503.png"
+    "stderr": "Wrote 467x60 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1503.png"
   },
   {
     "section": "Market Corpus / Probability",
@@ -22749,10 +22749,10 @@
     "id": "1517",
     "image": "assets/1517.png",
     "ok": true,
-    "width": 421,
+    "width": 425,
     "height": 52,
     "stdout": "",
-    "stderr": "Wrote 421x52 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1517.png"
+    "stderr": "Wrote 425x52 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1517.png"
   },
   {
     "section": "Market Corpus / Discrete Math",
@@ -23319,10 +23319,10 @@
     "id": "1555",
     "image": "assets/1555.png",
     "ok": true,
-    "width": 1080,
+    "width": 1086,
     "height": 69,
     "stdout": "",
-    "stderr": "Wrote 1080x69 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1555.png"
+    "stderr": "Wrote 1086x69 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1555.png"
   },
   {
     "section": "Market Corpus / Geometry",
@@ -23589,10 +23589,10 @@
     "id": "1573",
     "image": "assets/1573.png",
     "ok": true,
-    "width": 98,
-    "height": 79,
+    "width": 76,
+    "height": 78,
     "stdout": "",
-    "stderr": "Wrote 98x79 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1573.png"
+    "stderr": "Wrote 76x78 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1573.png"
   },
   {
     "section": "Market Corpus / Multiline Complex",
@@ -23814,10 +23814,10 @@
     "id": "1588",
     "image": "assets/1588.png",
     "ok": true,
-    "width": 190,
-    "height": 59,
+    "width": 197,
+    "height": 44,
     "stdout": "",
-    "stderr": "Wrote 190x59 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1588.png"
+    "stderr": "Wrote 197x44 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1588.png"
   },
   {
     "section": "Market Corpus / Arrows And Relations",
@@ -23934,10 +23934,10 @@
     "id": "1596",
     "image": "assets/1596.png",
     "ok": true,
-    "width": 83,
-    "height": 96,
+    "width": 76,
+    "height": 97,
     "stdout": "",
-    "stderr": "Wrote 83x96 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1596.png"
+    "stderr": "Wrote 76x97 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1596.png"
   },
   {
     "section": "Market Corpus / Delimiters",
@@ -24009,10 +24009,10 @@
     "id": "1601",
     "image": "assets/1601.png",
     "ok": true,
-    "width": 295,
+    "width": 301,
     "height": 49,
     "stdout": "",
-    "stderr": "Wrote 295x49 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1601.png"
+    "stderr": "Wrote 301x49 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1601.png"
   },
   {
     "section": "Market Corpus / Fonts And Styles",
@@ -24024,10 +24024,10 @@
     "id": "1602",
     "image": "assets/1602.png",
     "ok": true,
-    "width": 411,
-    "height": 43,
+    "width": 416,
+    "height": 39,
     "stdout": "",
-    "stderr": "Wrote 411x43 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1602.png"
+    "stderr": "Wrote 416x39 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1602.png"
   },
   {
     "section": "Market Corpus / Fonts And Styles",
@@ -24039,10 +24039,10 @@
     "id": "1603",
     "image": "assets/1603.png",
     "ok": true,
-    "width": 205,
+    "width": 217,
     "height": 50,
     "stdout": "",
-    "stderr": "Wrote 205x50 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1603.png"
+    "stderr": "Wrote 217x50 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1603.png"
   },
   {
     "section": "Market Corpus / Fonts And Styles",

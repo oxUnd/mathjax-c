@@ -149,6 +149,87 @@ static uint32_t math_italic_codepoint(uint32_t cp) {
   return cp;
 }
 
+static uint32_t math_variant_codepoint(mjx_variant variant, uint32_t cp) {
+  static const uint32_t script_upper[26] = {
+    0x1D49C, 0x212C, 0x1D49E, 0x1D49F, 0x2130, 0x2131, 0x1D4A2,
+    0x210B, 0x2110, 0x1D4A5, 0x1D4A6, 0x2112, 0x2133, 0x1D4A9,
+    0x1D4AA, 0x1D4AB, 0x1D4AC, 0x211B, 0x1D4AE, 0x1D4AF,
+    0x1D4B0, 0x1D4B1, 0x1D4B2, 0x1D4B3, 0x1D4B4, 0x1D4B5
+  };
+  static const uint32_t script_lower[26] = {
+    0x1D4B6, 0x1D4B7, 0x1D4B8, 0x1D4B9, 0x212F, 0x1D4BB, 0x210A,
+    0x1D4BD, 0x1D4BE, 0x1D4BF, 0x1D4C0, 0x1D4C1, 0x1D4C2, 0x1D4C3,
+    0x2134, 0x1D4C5, 0x1D4C6, 0x1D4C7, 0x1D4C8, 0x1D4C9,
+    0x1D4CA, 0x1D4CB, 0x1D4CC, 0x1D4CD, 0x1D4CE, 0x1D4CF
+  };
+  static const uint32_t double_upper[26] = {
+    0x1D538, 0x1D539, 0x2102, 0x1D53B, 0x1D53C, 0x1D53D, 0x1D53E,
+    0x210D, 0x1D540, 0x1D541, 0x1D542, 0x1D543, 0x1D544, 0x2115,
+    0x1D546, 0x2119, 0x211A, 0x211D, 0x1D54A, 0x1D54B,
+    0x1D54C, 0x1D54D, 0x1D54E, 0x1D54F, 0x1D550, 0x2124
+  };
+  static const uint32_t fraktur_upper[26] = {
+    0x1D504, 0x1D505, 0x212D, 0x1D507, 0x1D508, 0x1D509, 0x1D50A,
+    0x210C, 0x2111, 0x1D50D, 0x1D50E, 0x1D50F, 0x1D510, 0x1D511,
+    0x1D512, 0x1D513, 0x1D514, 0x211C, 0x1D516, 0x1D517,
+    0x1D518, 0x1D519, 0x1D51A, 0x1D51B, 0x1D51C, 0x2128
+  };
+
+  if (variant == MJX_VARIANT_ITALIC) return math_italic_codepoint(cp);
+
+  if (cp >= 'A' && cp <= 'Z') {
+    uint32_t i = cp - 'A';
+    switch (variant) {
+      case MJX_VARIANT_BOLD: return 0x1D400 + i;
+      case MJX_VARIANT_BOLD_ITALIC: return 0x1D468 + i;
+      case MJX_VARIANT_SCRIPT: return script_upper[i];
+      case MJX_VARIANT_BOLD_SCRIPT: return 0x1D4D0 + i;
+      case MJX_VARIANT_DOUBLE_STRUCK: return double_upper[i];
+      case MJX_VARIANT_FRAKTUR: return fraktur_upper[i];
+      case MJX_VARIANT_BOLD_FRAKTUR: return 0x1D56C + i;
+      case MJX_VARIANT_SANS_SERIF: return 0x1D5A0 + i;
+      case MJX_VARIANT_SANS_SERIF_ITALIC: return 0x1D608 + i;
+      case MJX_VARIANT_BOLD_SANS_SERIF: return 0x1D5D4 + i;
+      case MJX_VARIANT_SANS_SERIF_BOLD_ITALIC: return 0x1D63C + i;
+      case MJX_VARIANT_MONOSPACE: return 0x1D670 + i;
+      default: break;
+    }
+  }
+
+  if (cp >= 'a' && cp <= 'z') {
+    uint32_t i = cp - 'a';
+    switch (variant) {
+      case MJX_VARIANT_BOLD: return 0x1D41A + i;
+      case MJX_VARIANT_BOLD_ITALIC: return 0x1D482 + i;
+      case MJX_VARIANT_SCRIPT: return script_lower[i];
+      case MJX_VARIANT_BOLD_SCRIPT: return 0x1D4EA + i;
+      case MJX_VARIANT_DOUBLE_STRUCK: return 0x1D552 + i;
+      case MJX_VARIANT_FRAKTUR: return 0x1D51E + i;
+      case MJX_VARIANT_BOLD_FRAKTUR: return 0x1D586 + i;
+      case MJX_VARIANT_SANS_SERIF: return 0x1D5BA + i;
+      case MJX_VARIANT_SANS_SERIF_ITALIC: return 0x1D622 + i;
+      case MJX_VARIANT_BOLD_SANS_SERIF: return 0x1D5EE + i;
+      case MJX_VARIANT_SANS_SERIF_BOLD_ITALIC: return 0x1D656 + i;
+      case MJX_VARIANT_MONOSPACE: return 0x1D68A + i;
+      default: break;
+    }
+  }
+
+  if (cp >= '0' && cp <= '9') {
+    uint32_t i = cp - '0';
+    switch (variant) {
+      case MJX_VARIANT_BOLD: return 0x1D7CE + i;
+      case MJX_VARIANT_DOUBLE_STRUCK: return 0x1D7D8 + i;
+      case MJX_VARIANT_SANS_SERIF: return 0x1D7E2 + i;
+      case MJX_VARIANT_BOLD_SANS_SERIF: return 0x1D7EC + i;
+      case MJX_VARIANT_MONOSPACE: return 0x1D7F6 + i;
+      default: break;
+    }
+  }
+
+  return cp;
+}
+
 static int token_has_mathvariant(const mjx_node* node) {
   return mjx_node_get_attr(node, "mathvariant") != NULL;
 }
@@ -156,7 +237,7 @@ static int token_has_mathvariant(const mjx_node* node) {
 static uint32_t layout_variant_codepoint(mjx_node* node, uint32_t cp) {
   if (!node || node->type != MJX_NODE_MI) return cp;
 
-  if (node->variant == MJX_VARIANT_ITALIC) return math_italic_codepoint(cp);
+  if (node->variant != MJX_VARIANT_NORMAL) return math_variant_codepoint(node->variant, cp);
   if (node->variant == MJX_VARIANT_NORMAL && token_has_mathvariant(node)) return cp;
 
   /* MathML's default for single-letter identifiers is italic.  The parser
@@ -888,28 +969,32 @@ static mjx_box* layout_node_inner(mjx_layout_ctx* ctx, mjx_node* node, int displ
           if (is_cancel) {
             double thick = ctx->font_size * 0.04;
             double w = inner->width;
-            double h = inner->height + inner->depth;
-            mjx_box* boxed = mjx_box_create(MJX_BOX_VBOX);
-            mjx_box_add_child(boxed, inner, 0, -(inner->height));
+            double pad = ctx->font_size * 0.08;
+            double diag_w = w + 2.0 * pad;
+            double diag_h = inner->height + pad;
+            double diag_d = inner->depth + pad;
+            double diag_total = diag_h + diag_d;
+            mjx_box* boxed = mjx_box_create(MJX_BOX_HBOX);
+            mjx_box_add_child(boxed, inner, 0, 0);
             boxed->width = inner->width;
-            boxed->height = inner->height;
-            boxed->depth = inner->depth;
+            boxed->height = diag_h;
+            boxed->depth = diag_d;
 
             if (strcmp(notation, "cancel") == 0 || strcmp(notation, "xcancel") == 0) {
               mjx_box* diag = mjx_box_create(MJX_BOX_DIAGONAL);
-              diag->diag_x1 = 0; diag->diag_y1 = h;
-              diag->diag_x2 = w; diag->diag_y2 = 0;
+              diag->diag_x1 = 0; diag->diag_y1 = diag_total;
+              diag->diag_x2 = diag_w; diag->diag_y2 = 0;
               diag->diag_thickness = thick;
-              diag->width = w; diag->height = h;
-              mjx_box_add_child(boxed, diag, 0, 0);
+              diag->width = diag_w; diag->height = diag_h; diag->depth = diag_d;
+              mjx_box_add_child(boxed, diag, -pad, 0);
             }
             if (strcmp(notation, "bcancel") == 0 || strcmp(notation, "xcancel") == 0) {
               mjx_box* diag = mjx_box_create(MJX_BOX_DIAGONAL);
               diag->diag_x1 = 0; diag->diag_y1 = 0;
-              diag->diag_x2 = w; diag->diag_y2 = h;
+              diag->diag_x2 = diag_w; diag->diag_y2 = diag_total;
               diag->diag_thickness = thick;
-              diag->width = w; diag->height = h;
-              mjx_box_add_child(boxed, diag, 0, 0);
+              diag->width = diag_w; diag->height = diag_h; diag->depth = diag_d;
+              mjx_box_add_child(boxed, diag, -pad, 0);
             }
             return boxed;
           }

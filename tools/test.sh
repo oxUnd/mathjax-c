@@ -875,7 +875,7 @@ run_test "pmatrix 2x2"              '\begin{pmatrix} a & b \\ c & d \end{pmatrix
 run_test "bmatrix 2x2"              '\begin{bmatrix} a & b \\ c & d \end{bmatrix}' 55000
 run_test "Bmatrix 2x2"              '\begin{Bmatrix} 1 & 2 \\ 3 & 4 \end{Bmatrix}' 50000
 run_test "vmatrix 2x2"              '\begin{vmatrix} a & b \\ c & d \end{vmatrix}' 65000
-run_test "Vmatrix 2x2"              '\begin{Vmatrix} a & b \\ c & d \end{Vmatrix}' 78000
+run_test "Vmatrix 2x2"              '\begin{Vmatrix} a & b \\ c & d \end{Vmatrix}' 60000
 run_test "matrix 3x3"               '\begin{matrix} a & b & c \\ d & e & f \\ g & h & i \end{matrix}' 50000
 run_test "smallmatrix"              '\begin{smallmatrix} a & b \\ c & d \end{smallmatrix}' 1
 run_test "array basic"              '\begin{array}{cc} a & b \\ c & d \end{array}' 1

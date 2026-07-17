@@ -10,10 +10,15 @@
 static uint32_t decode_delim_codepoint(const char* delim) {
   const char* actual = delim;
   if (!actual || !actual[0] || actual[0] == '.') return 0;
-  if (actual[0] == '\\') actual++;
   if (!actual[0]) return 0;
 
   {
+    const char* unicode = mjx_lookup_delimiter(actual);
+    if (unicode && unicode[0]) actual = unicode;
+  }
+  if (actual[0] == '\\') {
+    actual++;
+    if (!actual[0]) return 0;
     const char* unicode = mjx_lookup_delimiter(actual);
     if (unicode && unicode[0]) actual = unicode;
   }
@@ -78,6 +83,10 @@ static mjx_box* make_stix_delim_variant(mjx_layout_ctx* ctx, uint32_t cp,
 static int is_brace_codepoint(uint32_t cp) {
   return cp == '{' || cp == '}';
 }
+
+static mjx_box* make_double_vertical_delim(mjx_layout_ctx* ctx,
+                                           double target_height,
+                                           double axis);
 
 static mjx_box* make_delim_assembly(mjx_layout_ctx* ctx, uint32_t cp,
                                     double target_height, double axis,
@@ -154,6 +163,11 @@ static mjx_box* make_stretchy_delim(mjx_layout_ctx* ctx, const char* delim,
   double scale = (ctx->font && ctx->font->em_size > 0) ?
     ctx->font_size / ctx->font->em_size : 1.0;
 
+  if (cp == 0x2016) {
+    mjx_box* double_bar = make_double_vertical_delim(ctx, target_height, axis);
+    if (double_bar) return double_bar;
+  }
+
   if (is_brace_codepoint(cp)) {
     mjx_box* assembled = make_delim_assembly(ctx, cp, target_height, axis, scale);
     if (assembled) return assembled;
@@ -210,6 +224,17 @@ static mjx_box* make_stretchy_delim(mjx_layout_ctx* ctx, const char* delim,
     }
     set_symmetric_delim_metrics(ctx, glyph, target_height, axis);
   }
+  return glyph;
+}
+
+static mjx_box* make_double_vertical_delim(mjx_layout_ctx* ctx,
+                                           double target_height,
+                                           double axis) {
+  mjx_box* glyph = mjx_box_create_glyph(ctx, 0x2016);
+  if (!glyph) return NULL;
+  set_symmetric_delim_metrics(ctx, glyph, target_height, axis);
+  glyph->allow_nonuniform_scale = 1;
+  glyph->tex_class = MJX_TEXCLASS_ORD;
   return glyph;
 }
 
