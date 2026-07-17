@@ -289,13 +289,7 @@ static char* read_dimension_argument(parse_state* state) {
   return buf;
 }
 
-static mjx_node* make_operator_node(parse_state* state, uint32_t codepoint,
-                                     mjx_texclass tex_class, int is_largeop) {
-  (void)state;
-  mjx_node* node = mjx_node_create(MJX_NODE_MO);
-  if (!node) return NULL;
-
-  char utf8[8];
+static void codepoint_to_utf8(uint32_t codepoint, char utf8[8]) {
   if (codepoint < 0x80) {
     utf8[0] = codepoint; utf8[1] = '\0';
   } else if (codepoint < 0x800) {
@@ -314,6 +308,16 @@ static mjx_node* make_operator_node(parse_state* state, uint32_t codepoint,
     utf8[3] = 0x80 | (codepoint & 0x3F);
     utf8[4] = '\0';
   }
+}
+
+static mjx_node* make_operator_node(parse_state* state, uint32_t codepoint,
+                                     mjx_texclass tex_class, int is_largeop) {
+  (void)state;
+  mjx_node* node = mjx_node_create(MJX_NODE_MO);
+  if (!node) return NULL;
+
+  char utf8[8];
+  codepoint_to_utf8(codepoint, utf8);
 
   node->text = strdup(utf8);
   node->text_len = strlen(utf8);
@@ -349,6 +353,12 @@ static mjx_node* make_identifier(parse_state* state, const char* text) {
   node->text = strdup(text);
   node->text_len = strlen(text);
   return node;
+}
+
+static mjx_node* make_identifier_codepoint(parse_state* state, uint32_t codepoint) {
+  char utf8[8];
+  codepoint_to_utf8(codepoint, utf8);
+  return make_identifier(state, utf8);
 }
 
 static mjx_node* make_number(parse_state* state, const char* text) {
@@ -1481,8 +1491,10 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
     }
   }
 
-  if (mjx_lookup_greek(cmd, &cp, &tex_class))
-    return make_operator_node(state, cp, tex_class, 0);
+  if (mjx_lookup_greek(cmd, &cp, &tex_class)) {
+    (void)tex_class;
+    return make_identifier_codepoint(state, cp);
+  }
 
   if (mjx_lookup_binop(cmd, &cp, &tex_class))
     return make_operator_node(state, cp, tex_class, 0);
