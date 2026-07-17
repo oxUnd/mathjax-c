@@ -33,6 +33,8 @@ int mjx_stix_get_fraction_rule_variants(const unsigned int** glyphs,
 int mjx_stix_get_horizontal_parts(uint32_t codepoint,
                                   const mjx_stix_glyph_part** parts,
                                   unsigned int* count);
+int mjx_stix_get_largeop_display_variant(uint32_t codepoint,
+                                         unsigned int* glyph_id);
 
 #ifdef __cplusplus
 }

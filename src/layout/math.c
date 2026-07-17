@@ -1075,15 +1075,7 @@ static mjx_box* layout_operator(mjx_layout_ctx* ctx, mjx_node* node, int display
 
   /* For large ops in display style, try to use a larger glyph variant */
   if (node->mo_largeop && display && node->script_level == 0 && node->text_len > 0) {
-    uint32_t cp = (unsigned char)node->text[0];
-    if (cp < 0x80 && node->text_len > 1) {
-      /* Multi-byte: decode UTF-8 */
-      if ((cp & 0xE0) == 0xC0 && node->text_len >= 2) {
-        cp = ((cp & 0x1F) << 6) | ((unsigned char)node->text[1] & 0x3F);
-      } else if ((cp & 0xF0) == 0xE0 && node->text_len >= 3) {
-        cp = ((cp & 0x0F) << 12) | (((unsigned char)node->text[1] & 0x3F) << 6) | ((unsigned char)node->text[2] & 0x3F);
-      }
-    }
+    uint32_t cp = decode_first_codepoint(node->text, node->text_len);
 
     mjx_glyph_variant variants[16];
     unsigned int var_count = 0;
@@ -1092,16 +1084,41 @@ static mjx_box* layout_operator(mjx_layout_ctx* ctx, mjx_node* node, int display
       unsigned int best = var_count - 1;
       double scale = (ctx->font && ctx->font->em_size > 0) ?
         ctx->font_size / ctx->font->em_size : 1.0;
+      mjx_glyph_id_info info;
       mjx_box* box = mjx_box_create(MJX_BOX_GLYPH);
       if (box) {
         box->codepoint = cp;
         box->glyph_id = variants[best].glyph_id;
         box->font_size = ctx->font_size;
-        box->width = variants[best].advance_width * scale;
-        box->height = variants[best].height * scale;
+        if (mjx_font_get_glyph_id_info(ctx->font, variants[best].glyph_id, &info)) {
+          box->width = info.advance_width * scale;
+          box->height = info.height * scale;
+          box->depth = info.depth * scale;
+        } else {
+          box->width = variants[best].advance_width * scale;
+          box->height = variants[best].height * scale;
+        }
         box->tex_class = node->tex_class;
         ctx->font_size = saved;
         return box;
+      }
+    } else {
+      unsigned int glyph_id = 0;
+      mjx_glyph_id_info info;
+      if (mjx_stix_get_largeop_display_variant(cp, &glyph_id) &&
+          mjx_font_get_glyph_id_info(ctx->font, glyph_id, &info)) {
+        mjx_box* box = mjx_box_create(MJX_BOX_GLYPH);
+        if (box) {
+          box->codepoint = cp;
+          box->glyph_id = glyph_id;
+          box->font_size = ctx->font_size;
+          box->width = info.advance_width;
+          box->height = info.height;
+          box->depth = info.depth;
+          box->tex_class = node->tex_class;
+          ctx->font_size = saved;
+          return box;
+        }
       }
     }
   }

@@ -187,6 +187,24 @@ int mjx_stix_get_fraction_rule_variants(const unsigned int** glyphs,
   return 1;
 }
 
+int mjx_stix_get_largeop_display_variant(uint32_t codepoint,
+                                         unsigned int* glyph_id) {
+  if (!glyph_id) return 0;
+
+  switch (codepoint) {
+    case 0x222B: *glyph_id = 1699; return 1; /* integral */
+    case 0x222C: *glyph_id = 1705; return 1; /* double integral */
+    case 0x222D: *glyph_id = 1711; return 1; /* triple integral */
+    case 0x222E: *glyph_id = 1717; return 1; /* contour integral */
+    case 0x222F: *glyph_id = 1723; return 1; /* surface integral */
+    case 0x2230: *glyph_id = 1729; return 1; /* volume integral */
+    case 0x2231: *glyph_id = 1735; return 1; /* clockwise integral */
+    case 0x2232: *glyph_id = 1741; return 1; /* clockwise contour integral */
+    case 0x2233: *glyph_id = 1747; return 1; /* anticlockwise contour integral */
+    default: return 0;
+  }
+}
+
 int mjx_stix_get_horizontal_parts(uint32_t codepoint,
                                   const mjx_stix_glyph_part** parts,
                                   unsigned int* count) {
