@@ -365,7 +365,7 @@ function writeHtml(results) {
     h3 small { color: var(--muted); font-weight: 500; letter-spacing: 0; text-transform: none; }
     .render { min-height: 96px; display: flex; align-items: center; justify-content: center; overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 16px; }
     .render img { max-width: 100%; height: auto; }
-    .mjx-render { font-size: 24px; color: #111; }
+    .mjx-render { font-size: 36px; color: #111; }
     .hidden { display: none; }
     @media (max-width: 900px) { .controls, .compare { grid-template-columns: 1fr; } }
   </style>

@@ -166,6 +166,25 @@ static uint32_t layout_variant_codepoint(mjx_node* node, uint32_t cp) {
   return cp;
 }
 
+static int table_col_align(const char* align_str, size_t col, size_t ncols) {
+  if (!align_str || !align_str[0]) return 0;
+
+  if (strcmp(align_str, "right") == 0) return 2;
+  if (strcmp(align_str, "center") == 0) return 1;
+  if (strcmp(align_str, "left") == 0) return 0;
+
+  if (ncols == 2 && strcmp(align_str, "rcl") == 0) {
+    return col == 0 ? 2 : 0;
+  }
+
+  size_t len = strlen(align_str);
+  if (len == 0) return 0;
+  char a = align_str[col < len ? col : len - 1];
+  if (a == 'r') return 2;
+  if (a == 'c') return 1;
+  return 0;
+}
+
 static mjx_box* layout_text_token(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   const char* text = node->text;
   size_t len = node->text_len;
@@ -1108,6 +1127,8 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
   const char* accent_kind = (accent_mode || under_accent_mode) ?
     mjx_node_get_attr(node->children[1], "accent_kind") : NULL;
   int normal_accent = accent_kind && strcmp(accent_kind, "normal") == 0;
+  uint32_t current_accent_cp = (accent_mode || under_accent_mode) ?
+    decode_first_codepoint(node->children[1]->text, node->children[1]->text_len) : 0;
 
   ctx->font_size = saved * mjx_font_script_scale(ctx->font, 1) * 0.7;
   ctx->script_depth++;
@@ -1117,8 +1138,7 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
 
   if (node->type == MJX_NODE_MOVER) {
     if (accent_mode) {
-      uint32_t accent_cp = decode_first_codepoint(node->children[1]->text,
-                                                  node->children[1]->text_len);
+      uint32_t accent_cp = current_accent_cp;
       if (normal_accent) {
         ctx->font_size = (accent_cp == 0x20D7) ? saved * 0.42 : saved;
         over = (accent_cp == 0x20D7) ? make_font_first_accent(ctx, accent_cp, NULL)
@@ -1148,8 +1168,7 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
     if (accent_mode && over) over->depth = 0;
   } else if (node->type == MJX_NODE_MUNDER) {
     if (under_accent_mode) {
-      uint32_t accent_cp = decode_first_codepoint(node->children[1]->text,
-                                                  node->children[1]->text_len);
+      uint32_t accent_cp = current_accent_cp;
       if (accent_cp == 0x2190 || accent_cp == 0x2192 ||
           accent_cp == 0x2194) {
         ctx->font_size = saved * 0.58;
@@ -1224,7 +1243,11 @@ static mjx_box* layout_limits(mjx_layout_ctx* ctx, mjx_node* node, int display) 
     }
     double over_y;
     if (accent_mode) {
-      over_y = -(base->height + upper_gap + over->depth);
+      int dot_accent = normal_accent &&
+        (current_accent_cp == 0x02D9 || current_accent_cp == 0x00A8);
+      over_y = dot_accent
+        ? -(base->height - over->height * 0.75 + upper_gap)
+        : -(base->height + upper_gap + over->depth);
     } else {
       over_y = -(base->height + upper_gap + over->depth);
     }
@@ -1284,11 +1307,6 @@ static mjx_box* layout_table(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   }
 
   const char* align_str = mjx_node_get_attr(node, "align");
-  int col_align = 0;
-  if (align_str) {
-    if (strstr(align_str, "right") || strstr(align_str, "r")) col_align = 2;
-    else if (strstr(align_str, "center") || strstr(align_str, "c")) col_align = 1;
-  }
 
   size_t row_idx = 0;
   for (size_t r = 0; r < node->child_count; r++) {
@@ -1325,6 +1343,7 @@ static mjx_box* layout_table(mjx_layout_ctx* ctx, mjx_node* node, int display) {
       mjx_box* cell = cells[r][c];
       if (!cell) { x += col_widths[c] + col_space; continue; }
 
+      int col_align = table_col_align(align_str, c, ncols);
       double cell_x;
       if (col_align == 2) cell_x = x + col_widths[c] - cell->width;
       else if (col_align == 1) cell_x = x + (col_widths[c] - cell->width) / 2.0;

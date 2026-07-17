@@ -116,6 +116,7 @@ mjx_box* mjx_layout_fraction(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     mjx_box_destroy(denom);
     return NULL;
   }
+  result->tex_class = MJX_TEXCLASS_INNER;
 
   double max_width = (num->width > denom->width) ? num->width : denom->width;
   if (is_bevelled) {
@@ -135,6 +136,7 @@ mjx_box* mjx_layout_fraction(mjx_layout_ctx* ctx, mjx_node* node, int display) {
       mjx_box_destroy(denom);
       return NULL;
     }
+    result->tex_class = MJX_TEXCLASS_INNER;
 
     mjx_box_add_child(result, num, 0, -vgap - num->depth);
 

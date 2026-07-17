@@ -42,6 +42,7 @@ static mjx_node* env_cases(mjx_parser* parser, const char* env_name, mjx_node* c
 static mjx_node* env_aligned(mjx_parser* parser, const char* env_name, mjx_node* content) {
   (void)parser; (void)env_name;
   mjx_node_set_attr(content, "align", "rcl");
+  mjx_node_set_attr(content, "col_space", "0.25em");
   mjx_node_set_attr(content, "row_space", "0.5em");
   return content;
 }
