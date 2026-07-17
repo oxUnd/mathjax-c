@@ -410,6 +410,34 @@ static void apply_math_bold(mjx_node* node) {
   }
 }
 
+static void apply_math_variant(mjx_node* node, mjx_variant variant, const char* attr_value) {
+  if (!node) return;
+
+  if (node->type == MJX_NODE_MI || node->type == MJX_NODE_MN ||
+      node->type == MJX_NODE_MO || node->type == MJX_NODE_MTEXT ||
+      node->type == MJX_NODE_TEXT) {
+    node->variant = variant;
+    if (attr_value) mjx_node_set_attr(node, "mathvariant", attr_value);
+  }
+
+  for (size_t i = 0; i < node->child_count; i++) {
+    apply_math_variant(node->children[i], variant, attr_value);
+  }
+}
+
+static mjx_node* handle_math_variant_command(parse_state* state, mjx_variant variant,
+                                             const char* attr_value) {
+  char* arg = read_argument(state);
+  if (!arg) return NULL;
+  parse_state s = *state;
+  s.input = arg;
+  s.pos = arg;
+  mjx_node* node = parse_expression(&s, 0);
+  if (node) apply_math_variant(node, variant, attr_value);
+  free(arg);
+  return node ? node : mjx_node_create(MJX_NODE_MROW);
+}
+
 static mjx_node* make_operator_str(parse_state* state, const char* text) {
   (void)state;
   mjx_node* node = mjx_node_create(MJX_NODE_MO);
@@ -1635,21 +1663,11 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
   }
 
   if (strcmp(cmd, "textit") == 0) {
-    char* arg = read_argument(state);
-    if (!arg) return NULL;
-    mjx_node* node = mjx_node_create(MJX_NODE_MI);
-    if (node) { node->text = strdup(arg); node->text_len = strlen(arg); }
-    free(arg);
-    return node;
+    return handle_math_variant_command(state, MJX_VARIANT_ITALIC, "italic");
   }
 
   if (strcmp(cmd, "mathrm") == 0) {
-    char* arg = read_argument(state);
-    if (!arg) return NULL;
-    mjx_node* node = mjx_node_create(MJX_NODE_MI);
-    if (node) { node->text = strdup(arg); node->text_len = strlen(arg); }
-    free(arg);
-    return node;
+    return handle_math_variant_command(state, MJX_VARIANT_NORMAL, "normal");
   }
 
   if (strcmp(cmd, "bf") == 0 || strcmp(cmd, "it") == 0 ||
@@ -1896,13 +1914,31 @@ static mjx_node* handle_command(parse_state* state, const char* cmd) {
       strcmp(cmd, "mathbb") == 0 || strcmp(cmd, "mathsf") == 0 ||
       strcmp(cmd, "mathtt") == 0 || strcmp(cmd, "mathfrak") == 0 ||
       strcmp(cmd, "mathscr") == 0) {
-    char* arg = read_argument(state);
-    if (!arg) return NULL;
-    parse_state sub = *state;
-    sub.input = arg; sub.pos = arg;
-    mjx_node* content = parse_expression(&sub, 0);
-    free(arg);
-    return content ? content : mjx_node_create(MJX_NODE_MROW);
+    mjx_variant variant = MJX_VARIANT_NORMAL;
+    const char* attr = "normal";
+    if (strcmp(cmd, "mathit") == 0) {
+      variant = MJX_VARIANT_ITALIC;
+      attr = "italic";
+    } else if (strcmp(cmd, "mathbf") == 0) {
+      variant = MJX_VARIANT_BOLD;
+      attr = "bold";
+    } else if (strcmp(cmd, "mathcal") == 0 || strcmp(cmd, "mathscr") == 0) {
+      variant = MJX_VARIANT_SCRIPT;
+      attr = "script";
+    } else if (strcmp(cmd, "mathbb") == 0) {
+      variant = MJX_VARIANT_DOUBLE_STRUCK;
+      attr = "double-struck";
+    } else if (strcmp(cmd, "mathsf") == 0) {
+      variant = MJX_VARIANT_SANS_SERIF;
+      attr = "sans-serif";
+    } else if (strcmp(cmd, "mathtt") == 0) {
+      variant = MJX_VARIANT_MONOSPACE;
+      attr = "monospace";
+    } else if (strcmp(cmd, "mathfrak") == 0) {
+      variant = MJX_VARIANT_FRAKTUR;
+      attr = "fraktur";
+    }
+    return handle_math_variant_command(state, variant, attr);
   }
 
   if (strcmp(cmd, "displaystyle") == 0) {

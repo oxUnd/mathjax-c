@@ -140,6 +140,32 @@ void mjx_layout_apply_styles(mjx_node* node, int display) {
 static double delimiter_axis_shift(mjx_layout_ctx* ctx, mjx_box* glyph, uint32_t cp);
 static mjx_box* shift_operator_glyph(mjx_box* glyph, double shift);
 
+static uint32_t math_italic_codepoint(uint32_t cp) {
+  if (cp >= 'A' && cp <= 'Z') return 0x1D434 + (cp - 'A');
+  if (cp >= 'a' && cp <= 'z') {
+    if (cp == 'h') return 0x210E;
+    return 0x1D44E + (cp - 'a');
+  }
+  return cp;
+}
+
+static int token_has_mathvariant(const mjx_node* node) {
+  return mjx_node_get_attr(node, "mathvariant") != NULL;
+}
+
+static uint32_t layout_variant_codepoint(mjx_node* node, uint32_t cp) {
+  if (!node || node->type != MJX_NODE_MI) return cp;
+
+  if (node->variant == MJX_VARIANT_ITALIC) return math_italic_codepoint(cp);
+  if (node->variant == MJX_VARIANT_NORMAL && token_has_mathvariant(node)) return cp;
+
+  /* MathML's default for single-letter identifiers is italic.  The parser
+   * generally emits TeX variables as mi tokens, so map Latin letters here
+   * unless the source explicitly requested normal/roman style. */
+  if (node->variant == MJX_VARIANT_NORMAL) return math_italic_codepoint(cp);
+  return cp;
+}
+
 static mjx_box* layout_text_token(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   const char* text = node->text;
   size_t len = node->text_len;
@@ -166,6 +192,7 @@ static mjx_box* layout_text_token(mjx_layout_ctx* ctx, mjx_node* node, int displ
       cp = ((cp & 0x07) << 18) | (((unsigned char)text[i+1] & 0x3F) << 12) | (((unsigned char)text[i+2] & 0x3F) << 6) | ((unsigned char)text[i+3] & 0x3F);
       i += 3;
     }
+    cp = layout_variant_codepoint(node, cp);
     if (node->type == MJX_NODE_MO) {
       mjx_box* glyph = mjx_box_create_glyph(ctx, cp);
       if (glyph) {
