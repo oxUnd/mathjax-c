@@ -232,8 +232,8 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   }
 
   if (integral_base) {
-    if (sup) sup_shift = base->height * 0.62;
-    if (sub) sub_shift = base->depth * 0.62;
+    if (sup) sup_shift = base->height * 0.48;
+    if (sub) sub_shift = base->depth * 0.40;
   }
 
   double sup_y = -sup_shift;

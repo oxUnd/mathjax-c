@@ -4945,9 +4945,9 @@
     "image": "assets/0330.png",
     "ok": true,
     "width": 159,
-    "height": 58,
+    "height": 55,
     "stdout": "",
-    "stderr": "Wrote 159x58 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0330.png"
+    "stderr": "Wrote 159x55 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0330.png"
   },
   {
     "section": "Test Suite / Large Operators",
