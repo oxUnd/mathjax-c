@@ -10974,10 +10974,10 @@
     "id": "0732",
     "image": "assets/0732.png",
     "ok": true,
-    "width": 120,
-    "height": 121,
+    "width": 167,
+    "height": 74,
     "stdout": "",
-    "stderr": "Wrote 120x121 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0732.png"
+    "stderr": "Wrote 167x74 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/0732.png"
   },
   {
     "section": "Test Suite / Limits and Style",
@@ -22734,10 +22734,10 @@
     "id": "1516",
     "image": "assets/1516.png",
     "ok": true,
-    "width": 534,
-    "height": 216,
+    "width": 550,
+    "height": 166,
     "stdout": "",
-    "stderr": "Wrote 534x216 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1516.png"
+    "stderr": "Wrote 550x166 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1516.png"
   },
   {
     "section": "Market Corpus / Discrete Math",
@@ -23214,10 +23214,10 @@
     "id": "1548",
     "image": "assets/1548.png",
     "ok": true,
-    "width": 397,
-    "height": 143,
+    "width": 414,
+    "height": 118,
     "stdout": "",
-    "stderr": "Wrote 397x143 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1548.png"
+    "stderr": "Wrote 414x118 PNG to /Users/xiangshouding/Work/AI/morph/vendor/mathjax-c/test/diff/assets/1548.png"
   },
   {
     "section": "Market Corpus / Machine Learning",

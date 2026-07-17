@@ -1,6 +1,7 @@
 #include "layout.h"
 #include "font.h"
 #include <math.h>
+#include <string.h>
 
 static uint32_t decode_first_codepoint(const char* text, size_t len) {
   if (!text || len == 0) return 0;
@@ -42,6 +43,62 @@ static int is_integral_script_base(mjx_node* node) {
   return 0;
 }
 
+static int is_default_limits_base(mjx_node* node) {
+  if (!node) return 0;
+  const char* movablelimits = mjx_node_get_attr(node, "movablelimits");
+  if (movablelimits && strcmp(movablelimits, "true") == 0) return 1;
+  if (node->type != MJX_NODE_MO) return 0;
+  if (node->mo_movablelimits) return 1;
+  if (!node->mo_largeop) return 0;
+  return !is_integral_codepoint(decode_first_codepoint(node->text, node->text_len));
+}
+
+static mjx_box* layout_scripts_as_limits(mjx_layout_ctx* ctx,
+                                         mjx_box* base,
+                                         mjx_box* sub,
+                                         mjx_box* sup,
+                                         int display) {
+  mjx_math_constants* mc = &ctx->font->math_constants;
+  double saved = ctx->font_size;
+  double upper_gap = (display && mc) ? mc->upper_limit_gap_min : (saved * 0.2);
+  double lower_gap = (display && mc) ? mc->lower_limit_gap_min : (saved * 0.2);
+  double width = base->width;
+  if (sup && sup->width > width) width = sup->width;
+  if (sub && sub->width > width) width = sub->width;
+
+  mjx_box* result = mjx_box_create(MJX_BOX_VBOX);
+  if (!result) return base;
+  result->tex_class = base->tex_class;
+
+  if (sup) {
+    double sup_x = (width - sup->width) / 2.0;
+    double sup_y = -(base->height + upper_gap + sup->depth);
+    mjx_box_add_child(result, sup, sup_x, sup_y);
+  }
+
+  mjx_box_add_child(result, base, (width - base->width) / 2.0, 0);
+
+  if (sub) {
+    double sub_x = (width - sub->width) / 2.0;
+    double sub_y = base->depth + lower_gap + sub->height;
+    mjx_box_add_child(result, sub, sub_x, sub_y);
+  }
+
+  result->width = width;
+  result->height = base->height;
+  result->depth = base->depth;
+
+  for (mjx_box_child* c = result->children; c; c = c->next) {
+    if (!c->box) continue;
+    double h = c->box->height - c->y;
+    double d = c->y + c->box->depth;
+    if (h > result->height) result->height = h;
+    if (d > result->depth) result->depth = d;
+  }
+
+  return result;
+}
+
 /* 
  * Layout for msup, msub, msubsup nodes.
  * Follows TeX algorithm for script placement.
@@ -77,6 +134,11 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   }
 
   ctx->script_depth--;
+
+  if (display && !mjx_node_get_attr(node, "nolimits") &&
+      is_default_limits_base(node->children[0])) {
+    return layout_scripts_as_limits(ctx, base, sub, sup, display);
+  }
 
   /* Calculate script positions */
   double sub_shift = mc->subscript_shift_down;

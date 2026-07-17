@@ -709,18 +709,7 @@ static mjx_node* handle_scripts(parse_state* state, mjx_node* base) {
     }
   }
 
-  int is_movable_operator = 0;
-  if (base && base->type == MJX_NODE_MO) {
-    is_movable_operator =
-      base->mo_movablelimits || (base->mo_largeop && largeop_default_limits(base));
-  } else if (base) {
-    const char* movablelimits = mjx_node_get_attr(base, "movablelimits");
-    is_movable_operator = movablelimits && strcmp(movablelimits, "true") == 0;
-  }
-
-  if ((has_sup || has_sub) && base && limits_mode != -1 &&
-      (limits_mode == 1 ||
-       (is_movable_operator && state->display && state->style_level == 0))) {
+  if ((has_sup || has_sub) && base && limits_mode == 1) {
     if (has_sup && has_sub) {
       mjx_node* underover = mjx_node_create(MJX_NODE_MUNDEROVER);
       if (underover) {
@@ -752,6 +741,7 @@ static mjx_node* handle_scripts(parse_state* state, mjx_node* base) {
       if (base) mjx_node_append(msubsup, base);
       if (sub_node) mjx_node_append(msubsup, sub_node);
       if (sup_node) mjx_node_append(msubsup, sup_node);
+      if (limits_mode == -1) mjx_node_set_attr(msubsup, "nolimits", "true");
     }
     return msubsup;
   } else if (has_sup) {
@@ -759,6 +749,7 @@ static mjx_node* handle_scripts(parse_state* state, mjx_node* base) {
     if (msup) {
       if (base) mjx_node_append(msup, base);
       if (sup_node) mjx_node_append(msup, sup_node);
+      if (limits_mode == -1) mjx_node_set_attr(msup, "nolimits", "true");
     }
     return msup;
   } else if (has_sub) {
@@ -766,6 +757,7 @@ static mjx_node* handle_scripts(parse_state* state, mjx_node* base) {
     if (msub) {
       if (base) mjx_node_append(msub, base);
       if (sub_node) mjx_node_append(msub, sub_node);
+      if (limits_mode == -1) mjx_node_set_attr(msub, "nolimits", "true");
     }
     return msub;
   }
