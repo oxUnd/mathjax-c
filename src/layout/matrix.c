@@ -75,6 +75,76 @@ static mjx_box* make_stix_delim_variant(mjx_layout_ctx* ctx, uint32_t cp,
   return glyph;
 }
 
+static int is_brace_codepoint(uint32_t cp) {
+  return cp == '{' || cp == '}';
+}
+
+static mjx_box* make_delim_assembly(mjx_layout_ctx* ctx, uint32_t cp,
+                                    double target_height, double axis,
+                                    double scale) {
+  mjx_glyph_part parts[32];
+  unsigned int np = 0;
+  double ic = 0;
+  int has_parts = mjx_font_get_parts(ctx->font, cp, parts, 32, &np, &ic);
+
+  if (!has_parts || np == 0) return NULL;
+
+  double total_adv = 0;
+  double extender_adv = 0;
+  int has_ext = 0;
+  for (unsigned int i = 0; i < np; i++) {
+    total_adv += parts[i].full_advance;
+    if (parts[i].is_extender) {
+      extender_adv = parts[i].full_advance;
+      has_ext = 1;
+    }
+  }
+
+  int repeat_count = 0;
+  if (has_ext && extender_adv > 0) {
+    double base = total_adv - extender_adv;
+    if (target_height > base) {
+      repeat_count = (int)ceil((target_height - base) / extender_adv);
+    }
+  }
+
+  mjx_box* vbox = mjx_box_create(MJX_BOX_VBOX);
+  double y = 0;
+  double actual_total = 0;
+  for (unsigned int i = 0; i < np; i++) {
+    int repeat = 1;
+    if (parts[i].is_extender) repeat = repeat_count > 0 ? repeat_count : 1;
+
+    for (int r = 0; r < repeat; r++) {
+      mjx_box* part = mjx_box_create(MJX_BOX_GLYPH);
+      if (!part) continue;
+      part->glyph_id = parts[i].glyph_id;
+      part->font_size = ctx->font_size;
+      part->width = mjx_font_glyph_width(ctx->font, parts[i].glyph_id) * scale;
+      part->height = mjx_font_glyph_height(ctx->font, parts[i].glyph_id) * scale;
+      part->depth = 0;
+      mjx_box_add_child(vbox, part, 0, y - part->height);
+      {
+        double adv = parts[i].full_advance * scale;
+        y -= adv;
+        actual_total += adv;
+      }
+    }
+  }
+
+  double part_w = 0;
+  mjx_box_child* c = vbox->children;
+  while (c) {
+    if (c->box && c->box->width > part_w) part_w = c->box->width;
+    c = c->next;
+  }
+  if (part_w <= 0) part_w = ctx->font_size * 0.5;
+  vbox->width = part_w;
+  if (actual_total <= 0.0) actual_total = target_height;
+  set_symmetric_delim_metrics(ctx, vbox, actual_total, axis);
+  return vbox;
+}
+
 static mjx_box* make_stretchy_delim(mjx_layout_ctx* ctx, const char* delim,
                                      double target_height, double axis) {
   if (!delim || !delim[0] || delim[0] == '.') return NULL;
@@ -83,6 +153,13 @@ static mjx_box* make_stretchy_delim(mjx_layout_ctx* ctx, const char* delim,
   if (!cp) return NULL;
   double scale = (ctx->font && ctx->font->em_size > 0) ?
     ctx->font_size / ctx->font->em_size : 1.0;
+
+  if (is_brace_codepoint(cp)) {
+    mjx_box* assembled = make_delim_assembly(ctx, cp, target_height, axis, scale);
+    if (assembled) return assembled;
+    mjx_box* stix_variant = make_stix_delim_variant(ctx, cp, target_height, axis, 1.35);
+    if (stix_variant) return stix_variant;
+  }
 
   mjx_glyph_variant variants[16];
   unsigned int nvariants = 0;
@@ -113,66 +190,9 @@ static mjx_box* make_stretchy_delim(mjx_layout_ctx* ctx, const char* delim,
     }
   }
 
-  mjx_glyph_part parts[32];
-  unsigned int np = 0;
-  double ic = 0;
-  int has_parts = mjx_font_get_parts(ctx->font, cp, parts, 32, &np, &ic);
-
-  if (has_parts && np > 0) {
-    double total_adv = 0;
-    double extender_adv = 0;
-    int has_ext = 0;
-    for (unsigned int i = 0; i < np; i++) {
-      total_adv += parts[i].full_advance;
-      if (parts[i].is_extender) {
-        extender_adv = parts[i].full_advance;
-        has_ext = 1;
-      }
-    }
-
-    int repeat_count = 0;
-    if (has_ext && extender_adv > 0) {
-      double base = total_adv - extender_adv;
-      if (target_height > base) {
-        repeat_count = (int)ceil((target_height - base) / extender_adv);
-      }
-    }
-
-    mjx_box* vbox = mjx_box_create(MJX_BOX_VBOX);
-    double y = 0;
-    double actual_total = 0;
-    for (unsigned int i = 0; i < np; i++) {
-      int repeat = 1;
-      if (parts[i].is_extender) repeat = repeat_count > 0 ? repeat_count : 1;
-
-      for (int r = 0; r < repeat; r++) {
-        mjx_box* part = mjx_box_create(MJX_BOX_GLYPH);
-        if (!part) continue;
-        part->glyph_id = parts[i].glyph_id;
-        part->font_size = ctx->font_size;
-        part->width = mjx_font_glyph_width(ctx->font, parts[i].glyph_id) * scale;
-        part->height = mjx_font_glyph_height(ctx->font, parts[i].glyph_id) * scale;
-        part->depth = 0;
-        mjx_box_add_child(vbox, part, 0, y - part->height);
-        {
-          double adv = parts[i].full_advance * scale;
-          y -= adv;
-          actual_total += adv;
-        }
-      }
-    }
-
-    double part_w = 0;
-    mjx_box_child* c = vbox->children;
-    while (c) {
-      if (c->box && c->box->width > part_w) part_w = c->box->width;
-      c = c->next;
-    }
-    if (part_w <= 0) part_w = ctx->font_size * 0.5;
-    vbox->width = part_w;
-    if (actual_total <= 0.0) actual_total = target_height;
-    set_symmetric_delim_metrics(ctx, vbox, actual_total, axis);
-    return vbox;
+  {
+    mjx_box* assembled = make_delim_assembly(ctx, cp, target_height, axis, scale);
+    if (assembled) return assembled;
   }
 
   {

@@ -43,6 +43,50 @@ static int is_integral_script_base(mjx_node* node) {
   return 0;
 }
 
+static int box_visual_right(mjx_layout_ctx* ctx, mjx_box* box, double* right) {
+  if (!ctx || !box || !right) return 0;
+
+  if (box->type == MJX_BOX_HBOX || box->type == MJX_BOX_VBOX ||
+      box->type == MJX_BOX_ATOM) {
+    int found = 0;
+    double max_right = 0.0;
+    for (mjx_box_child* child = box->children; child; child = child->next) {
+      double child_right = 0.0;
+      if (!child->box || !box_visual_right(ctx, child->box, &child_right)) continue;
+      child_right += child->x;
+      if (!found || child_right > max_right) max_right = child_right;
+      found = 1;
+    }
+    if (found) {
+      *right = max_right;
+      return 1;
+    }
+    return 0;
+  }
+
+  if (box->type != MJX_BOX_GLYPH) return 0;
+
+  mjx_font* font = (box->font_index == 1 && ctx->fallback_font) ? ctx->fallback_font : ctx->font;
+  if (!font) return 0;
+
+  double scale = (font->em_size > 0.0) ? box->font_size / font->em_size : 1.0;
+  if (box->glyph_id) {
+    mjx_glyph_id_info info;
+    if (!mjx_font_get_glyph_id_info(font, box->glyph_id, &info)) return 0;
+    *right = info.bbox_right * scale;
+    return 1;
+  }
+
+  if (box->codepoint) {
+    mjx_glyph_info info;
+    if (!mjx_font_get_glyph(font, box->codepoint, &info)) return 0;
+    *right = info.bbox_right * scale;
+    return 1;
+  }
+
+  return 0;
+}
+
 static int is_default_limits_base(mjx_node* node) {
   if (!node) return 0;
   const char* movablelimits = mjx_node_get_attr(node, "movablelimits");
@@ -212,6 +256,14 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   double script_x = x + base->width;
   double sup_x = script_x + base_italic_corr;
   double sub_x = script_x;
+  if (integral_base) {
+    double visual_right = 0.0;
+    if (box_visual_right(ctx, base, &visual_right)) {
+      double integral_right = x + visual_right;
+      sup_x = integral_right - ctx->font_size * 0.02 + base_italic_corr;
+      sub_x = integral_right - ctx->font_size * 0.18;
+    }
+  }
 
   if (sup) {
     mjx_box_add_child(result, sup, sup_x, sup_y);
