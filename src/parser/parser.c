@@ -149,6 +149,7 @@ static int largeop_default_limits(mjx_node* node) {
   if (!node || !node->text) return 0;
   uint32_t cp = decode_first_codepoint(node->text, node->text_len);
   if (cp >= 0x222B && cp <= 0x2233) return 0; /* integrals use side limits by default */
+  if (cp == 0x2A0C) return 0; /* quadruple integral */
   return 1;
 }
 

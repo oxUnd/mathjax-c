@@ -201,6 +201,7 @@ int mjx_stix_get_largeop_display_variant(uint32_t codepoint,
     case 0x2231: *glyph_id = 1735; return 1; /* clockwise integral */
     case 0x2232: *glyph_id = 1741; return 1; /* clockwise contour integral */
     case 0x2233: *glyph_id = 1747; return 1; /* anticlockwise contour integral */
+    case 0x2A0C: *glyph_id = 2837; return 1; /* quadruple integral */
     default: return 0;
   }
 }

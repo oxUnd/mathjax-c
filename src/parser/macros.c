@@ -49,8 +49,7 @@ static mjx_macro_def BUILTIN_MACROS[] = {
   {"iff", 0, "\\;\\Longleftrightarrow\\;", 0},
   {"impliedby", 0, "\\;\\Longleftarrow\\;", 0},
   {"colon", 0, "\\mathrel{\\mathop\\colon}", 0},
-  {"idotsint", 0, "\\int\\!\\int\\!\\int", 0},
-  {"iiiint", 0, "\\int\\!\\int\\!\\int\\!\\int", 0},
+  {"idotsint", 0, "\\int\\!\\cdots\\!\\int", 0},
   {"dddot", 1, "\\mathop{#1}\\limits^{\\text{...}}", 0},
   {"dddot", 1, "\\mathop{#1}\\limits^{\\text{...}}", 0},
 };

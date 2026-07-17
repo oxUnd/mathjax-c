@@ -2,6 +2,46 @@
 #include "font.h"
 #include <math.h>
 
+static uint32_t decode_first_codepoint(const char* text, size_t len) {
+  if (!text || len == 0) return 0;
+  unsigned char c = (unsigned char)text[0];
+  if ((c & 0x80) == 0) return c;
+  if ((c & 0xE0) == 0xC0 && len >= 2) {
+    return ((c & 0x1F) << 6) | ((unsigned char)text[1] & 0x3F);
+  }
+  if ((c & 0xF0) == 0xE0 && len >= 3) {
+    return ((c & 0x0F) << 12) |
+           (((unsigned char)text[1] & 0x3F) << 6) |
+           ((unsigned char)text[2] & 0x3F);
+  }
+  if ((c & 0xF8) == 0xF0 && len >= 4) {
+    return ((c & 0x07) << 18) |
+           (((unsigned char)text[1] & 0x3F) << 12) |
+           (((unsigned char)text[2] & 0x3F) << 6) |
+           ((unsigned char)text[3] & 0x3F);
+  }
+  return c;
+}
+
+static int is_integral_codepoint(uint32_t cp) {
+  return (cp >= 0x222B && cp <= 0x2233) || cp == 0x2A0C;
+}
+
+static int is_integral_script_base(mjx_node* node) {
+  if (!node) return 0;
+  if (node->type == MJX_NODE_MO) {
+    return is_integral_codepoint(decode_first_codepoint(node->text, node->text_len));
+  }
+  if (node->type == MJX_NODE_MROW && node->child_count > 0) {
+    for (size_t i = node->child_count; i > 0; i--) {
+      mjx_node* child = node->children[i - 1];
+      if (!child || child->type == MJX_NODE_MSPACE) continue;
+      return is_integral_script_base(child);
+    }
+  }
+  return 0;
+}
+
 /* 
  * Layout for msup, msub, msubsup nodes.
  * Follows TeX algorithm for script placement.
@@ -41,6 +81,7 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
   /* Calculate script positions */
   double sub_shift = mc->subscript_shift_down;
   double sup_shift = display ? mc->superscript_shift_up : mc->superscript_shift_up_cramped;
+  int integral_base = display && is_integral_script_base(node->children[0]);
 
   mjx_box* result = mjx_box_create(MJX_BOX_HBOX);
   if (!result) {
@@ -84,6 +125,11 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
     }
   }
 
+  if (integral_base) {
+    if (sup) sup_shift = base->height * 0.62;
+    if (sub) sub_shift = base->depth * 0.62;
+  }
+
   double sup_y = -sup_shift;
   double sub_y = sub_shift;
 
@@ -93,7 +139,7 @@ mjx_box* mjx_layout_scripts(mjx_layout_ctx* ctx, mjx_node* node, int display) {
       sub_y += mc->sub_superscript_gap_min - gap;
     }
 
-    {
+    if (!integral_base) {
       double bottom = -(sup_y + sup->depth);
       if (bottom > mc->superscript_bottom_max_with_subscript) {
         sup_y -= bottom - mc->superscript_bottom_max_with_subscript;

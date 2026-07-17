@@ -362,6 +362,7 @@ static const mjx_symbol_entry LARGE_OPS[] = {
   {"int",        0x222B, MJX_TEXCLASS_OP, 1},
   {"iint",       0x222C, MJX_TEXCLASS_OP, 1},
   {"iiint",      0x222D, MJX_TEXCLASS_OP, 1},
+  {"iiiint",     0x2A0C, MJX_TEXCLASS_OP, 1},
   {"oint",       0x222E, MJX_TEXCLASS_OP, 1},
   {"smallint",   0x222B, MJX_TEXCLASS_OP, 0},
   {"bigcap",     0x22C2, MJX_TEXCLASS_OP, 1},
